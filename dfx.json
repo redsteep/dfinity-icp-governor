@@ -1,0 +1,7 @@
+{
+  "canisters": {
+    "governance": {
+      "main": "src/main.mo"
+    }
+  }
+}
