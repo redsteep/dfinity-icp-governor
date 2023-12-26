@@ -1,7 +1,19 @@
 {
   "canisters": {
     "governance": {
-      "main": "src/main.mo"
+      "main": "src/governance.mo",
+      "type": "motoko",
+      "declarations": {
+        "node_compatibility": true
+      }
+    },
+    "icrc1-ledger": {
+      "main": "src/icrc1-ledger.mo",
+      "type": "motoko"
+    },
+    "test-executable": {
+      "main": "src/test-executable.mo",
+      "type": "motoko"
     }
   }
 }

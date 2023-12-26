@@ -16,3 +16,5 @@ canisters/
 # dfx distribution files
 dist/
 canister_ids.json
+
+test/

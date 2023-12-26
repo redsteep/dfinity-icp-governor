@@ -1,0 +1,17 @@
+type Proposal = 
+ record {
+   againstVotes: nat;
+   canceled: bool;
+   description: text;
+   executableCanisterId: text;
+   executed: bool;
+   forVotes: nat;
+   proposer: principal;
+ };
+service : {
+  cancel: (nat) -> (Proposal);
+  castVote: (nat, bool) -> (Proposal);
+  execute: (nat) -> (Proposal);
+  lookupProposal: (nat) -> (opt Proposal) query;
+  propose: (text, text) -> (nat, Proposal);
+}
