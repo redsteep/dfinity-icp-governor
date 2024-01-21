@@ -7,9 +7,6 @@
 .DS_Store
 **/.DS_Store
 
-# Build artifacts
-canisters/
-
 # dfx temporary files
 .dfx/
 
@@ -17,4 +14,5 @@ canisters/
 dist/
 canister_ids.json
 
+node_modules/
 test/

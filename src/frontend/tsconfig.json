@@ -13,7 +13,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": ["./app/*"],
+      "~/declarations/*": ["../declarations/*"],
     },
     // Remix takes care of building everything in `remix build`.
     "noEmit": true

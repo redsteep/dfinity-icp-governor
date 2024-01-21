@@ -1,0 +1,4 @@
+service : {
+  execute: () -> ();
+  getValue: () -> (nat) query;
+}

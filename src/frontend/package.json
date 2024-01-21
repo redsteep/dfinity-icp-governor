@@ -1,5 +1,5 @@
 {
-  "name": "instagram-antibot-web",
+  "name": "dfinity-icp-governance",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -10,12 +10,6 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@dfinity/agent": "^0.20.2",
-    "@dfinity/assets": "^0.20.2",
-    "@dfinity/candid": "^0.20.2",
-    "@dfinity/identity": "^0.20.2",
-    "@dfinity/identity-secp256k1": "^0.20.2",
-    "@dfinity/principal": "^0.20.2",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -49,6 +43,7 @@
     "react-dom": "^18.2.0",
     "remix-auth": "^3.6.0",
     "remix-auth-oauth2": "^1.11.0",
+    "remix-typedjson": "^0.4.1",
     "remix-validated-form": "^5.1.5",
     "sha256-file": "^1.0.0",
     "tailwind-merge": "^2.0.0",

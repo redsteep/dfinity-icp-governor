@@ -5,6 +5,8 @@ import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
+import List "mo:base/List";
+import Array "mo:base/Array";
 import Ledger "canister:icrc1-ledger";
 
 actor Governance {
@@ -108,6 +110,10 @@ actor Governance {
         newProposal;
       };
     };
+  };
+
+  public query func getProposals() : async [Proposal] {
+    Iter.toArray(proposalMap.vals());
   };
 
   public query func lookupProposal(proposalId : Nat) : async ?Proposal {

@@ -3,6 +3,11 @@ export default {
   ignoredRouteFiles: ["**/.*"],
   tailwind: true,
   postcss: true,
+  browserNodeBuiltinsPolyfill: {
+    modules: {
+      buffer: true,
+    },
+  },
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // publicPath: "/build/",
