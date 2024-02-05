@@ -39,3 +39,5 @@ export const createActor = (canisterId, options = {}) => {
     ...options.actorOptions,
   });
 };
+
+export const governance = createActor(canisterId);

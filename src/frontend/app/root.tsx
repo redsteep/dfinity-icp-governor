@@ -10,6 +10,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import { InternetIdentityProvider } from "@internet-identity-labs/react-ic-ii-auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: styles },
@@ -18,19 +22,29 @@ export const links: LinksFunction = () => [
 
 export default function App() {
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
-      </body>
-    </html>
+    <QueryClientProvider client={queryClient}>
+      {/* @ts-expect-error: missing 'children' prop */}
+      <InternetIdentityProvider
+        authClientOptions={{
+          maxTimeToLive: BigInt(Date.now() + 7 * 24 * 60 * 60 * 1e9),
+          identityProvider: "http://aovwi-4maaa-aaaaa-qaagq-cai.localhost:4943",
+        }}
+      >
+        <html lang="en">
+          <head>
+            <meta charSet="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <Meta />
+            <Links />
+          </head>
+          <body>
+            <Outlet />
+            <ScrollRestoration />
+            <Scripts />
+            <LiveReload />
+          </body>
+        </html>
+      </InternetIdentityProvider>
+    </QueryClientProvider>
   );
 }

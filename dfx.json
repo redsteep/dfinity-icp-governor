@@ -1,16 +1,36 @@
 {
   "canisters": {
+    "internet_identity": {
+      "type": "custom",
+      "candid": "https://github.com/dfinity/internet-identity/releases/download/release-2024-01-05/internet_identity.did",
+      "wasm": "https://github.com/dfinity/internet-identity/releases/download/release-2024-01-05/internet_identity_dev.wasm.gz",
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      },
+      "frontend": {}
+    },
     "governance": {
       "main": "src/canisters/governance.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "dependencies": ["icrc1_ledger"],
+      "declarations": {
+        "node_compatibility": false
+      }
     },
-    "icrc1-ledger": {
+    "icrc1_ledger": {
       "main": "src/canisters/icrc1-ledger.mo",
       "type": "motoko"
     },
-    "test-executable": {
+    "test_executable": {
       "main": "src/canisters/test-executable.mo",
       "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
     }
   }
 }

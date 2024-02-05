@@ -1,18 +1,62 @@
+type VoteOption = 
+ variant {
+   Against;
+   For;
+ };
+type Vote = 
+ record {
+   voteOption: VoteOption;
+   voter: principal;
+   votingPower: nat;
+ };
+type Time = int;
+type ProposalStatus = 
+ variant {
+   Approved;
+   Executed;
+   Open;
+   Pending;
+   Rejected: variant {
+               Cancelled;
+               QuorumNotMet;
+               RejectedByMajority;
+             };
+   Timelocked: Time;
+ };
 type Proposal = 
  record {
-   againstVotes: nat;
-   canceled: bool;
+   cancelledAt: opt Time;
+   createdAt: Time;
    description: text;
    executableCanisterId: text;
-   executed: bool;
-   forVotes: nat;
+   executedAt: opt Time;
+   id: nat;
    proposer: principal;
+   status: ProposalStatus;
+   timelockedUntil: opt Time;
+   votes: List;
  };
-service : {
-  cancel: (nat) -> (Proposal);
-  castVote: (nat, bool) -> (Proposal);
-  execute: (nat) -> (Proposal);
-  getProposals: () -> (vec Proposal) query;
-  lookupProposal: (nat) -> (opt Proposal) query;
-  propose: (text, text) -> (nat, Proposal);
-}
+type List_1 = 
+ opt record {
+       Proposal;
+       List_1;
+     };
+type List = 
+ opt record {
+       Vote;
+       List;
+     };
+type Governance = 
+ service {
+   cancel: (nat) -> (Proposal);
+   castVote: (nat, VoteOption) -> (Proposal);
+   execute: (nat) -> (Proposal);
+   getProposal: (nat) -> (Proposal) query;
+   getProposals: () -> (List_1) query;
+   propose: (text, text) -> (nat, Proposal);
+ };
+service : (record {
+             quorum: nat;
+             timelockDelay: nat;
+             votingPeriod: nat;
+           }) -> Governance

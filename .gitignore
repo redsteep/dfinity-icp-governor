@@ -16,3 +16,5 @@ canister_ids.json
 
 node_modules/
 test/
+
+.mops
