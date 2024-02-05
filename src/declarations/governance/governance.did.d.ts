@@ -2,15 +2,14 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 
 export interface Governance {
-  'cancel' : ActorMethod<[bigint], Proposal>,
-  'castVote' : ActorMethod<[bigint, VoteOption], Proposal>,
-  'execute' : ActorMethod<[bigint], Proposal>,
+  'cancel' : ActorMethod<[bigint], undefined>,
+  'castVote' : ActorMethod<[bigint, VoteOption], undefined>,
+  'execute' : ActorMethod<[bigint], undefined>,
   'getProposal' : ActorMethod<[bigint], Proposal>,
-  'getProposals' : ActorMethod<[], List_1>,
-  'propose' : ActorMethod<[string, string], [bigint, Proposal]>,
+  'getProposals' : ActorMethod<[], Array<Proposal>>,
+  'propose' : ActorMethod<[string, string], Proposal>,
 }
 export type List = [] | [[Vote, List]];
-export type List_1 = [] | [[Proposal, List_1]];
 export interface Proposal {
   'id' : bigint,
   'status' : ProposalStatus,

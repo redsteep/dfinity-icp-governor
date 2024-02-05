@@ -1,6 +1,6 @@
 export const idlFactory = ({ IDL }) => {
   const List = IDL.Rec();
-  const List_1 = IDL.Rec();
+  const VoteOption = IDL.Variant({ 'For' : IDL.Null, 'Against' : IDL.Null });
   const Time = IDL.Int;
   const ProposalStatus = IDL.Variant({
     'Open' : IDL.Null,
@@ -14,7 +14,6 @@ export const idlFactory = ({ IDL }) => {
     'Timelocked' : Time,
     'Pending' : IDL.Null,
   });
-  const VoteOption = IDL.Variant({ 'For' : IDL.Null, 'Against' : IDL.Null });
   const Vote = IDL.Record({
     'votingPower' : IDL.Nat,
     'voter' : IDL.Principal,
@@ -33,14 +32,13 @@ export const idlFactory = ({ IDL }) => {
     'proposer' : IDL.Principal,
     'timelockedUntil' : IDL.Opt(Time),
   });
-  List_1.fill(IDL.Opt(IDL.Tuple(Proposal, List_1)));
   const Governance = IDL.Service({
-    'cancel' : IDL.Func([IDL.Nat], [Proposal], []),
-    'castVote' : IDL.Func([IDL.Nat, VoteOption], [Proposal], []),
-    'execute' : IDL.Func([IDL.Nat], [Proposal], []),
+    'cancel' : IDL.Func([IDL.Nat], [], []),
+    'castVote' : IDL.Func([IDL.Nat, VoteOption], [], []),
+    'execute' : IDL.Func([IDL.Nat], [], []),
     'getProposal' : IDL.Func([IDL.Nat], [Proposal], ['query']),
-    'getProposals' : IDL.Func([], [List_1], ['query']),
-    'propose' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat, Proposal], []),
+    'getProposals' : IDL.Func([], [IDL.Vec(Proposal)], ['query']),
+    'propose' : IDL.Func([IDL.Text, IDL.Text], [Proposal], []),
   });
   return Governance;
 };

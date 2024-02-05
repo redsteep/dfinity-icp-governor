@@ -36,11 +36,6 @@ type Proposal =
    timelockedUntil: opt Time;
    votes: List;
  };
-type List_1 = 
- opt record {
-       Proposal;
-       List_1;
-     };
 type List = 
  opt record {
        Vote;
@@ -48,12 +43,12 @@ type List =
      };
 type Governance = 
  service {
-   cancel: (nat) -> (Proposal);
-   castVote: (nat, VoteOption) -> (Proposal);
-   execute: (nat) -> (Proposal);
+   cancel: (nat) -> ();
+   castVote: (nat, VoteOption) -> ();
+   execute: (nat) -> ();
    getProposal: (nat) -> (Proposal) query;
-   getProposals: () -> (List_1) query;
-   propose: (text, text) -> (nat, Proposal);
+   getProposals: () -> (vec Proposal) query;
+   propose: (text, text) -> (Proposal);
  };
 service : (record {
              quorum: nat;

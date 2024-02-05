@@ -9,6 +9,7 @@ import Principal "mo:base/Principal";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Int "mo:base/Int";
+import Array "mo:base/Array";
 
 actor class Governance(
   init : {
@@ -58,9 +59,14 @@ actor class Governance(
     status : ProposalStatus;
   };
 
-  stable var proposals : [(Nat, BaseProposal)] = [];
+  private stable var proposals : [(Nat, BaseProposal)] = [];
 
-  let proposalMap = Map.fromIter<Nat, BaseProposal>(proposals.vals(), 10, Nat.equal, func(n) { Text.hash(Nat.toText(n)) });
+  private let proposalMap = Map.fromIter<Nat, BaseProposal>(
+    proposals.vals(),
+    10,
+    Nat.equal,
+    func n = Text.hash(Nat.toText(n)),
+  );
 
   public shared ({ caller }) func propose(
     description : Text,
@@ -136,7 +142,7 @@ actor class Governance(
         proposalId,
         {
           proposal with
-          timelockedUntil = ?(Time.now() + init.timelockDelay);
+          timelockedUntil = ?(Time.now() + init.timelockDelay)
         },
       );
 
@@ -154,7 +160,7 @@ actor class Governance(
       proposalId,
       {
         proposal with
-        executedAt = ?Time.now();
+        executedAt = ?Time.now()
       },
     );
   };
@@ -170,7 +176,7 @@ actor class Governance(
     };
 
     switch (proposal.status) {
-      case (#Open or #Timelocked(_)) {
+      case (#Open or #Timelocked _) {
         proposalMap.put(
           proposalId,
           {
@@ -186,14 +192,12 @@ actor class Governance(
     };
   };
 
-  public query func getProposals() : async List.List<Proposal> {
-    List.map<BaseProposal, Proposal>(
-      Iter.toList(proposalMap.vals()),
-      func proposal {
-        return {
-          proposal with
-          status = getProposalStatus(proposal)
-        };
+  public query func getProposals() : async [Proposal] {
+    Array.map<BaseProposal, Proposal>(
+      Iter.toArray(proposalMap.vals()),
+      func proposal = {
+        proposal with
+        status = getProposalStatus(proposal)
       },
     );
   };
