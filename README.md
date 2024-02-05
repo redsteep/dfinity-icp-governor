@@ -4,7 +4,8 @@
 
 This example requires an installation of:
 
-- [x] Install the [IC SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install/index.mdx).
+- [x] Install the [IC SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install/index.mdx);
+- [x] Install [Mops PM](https://docs.mops.one/quick-start) using NPM: `npm i -g ic-mops`.
 
 Begin by opening a terminal window.
 
@@ -18,8 +19,6 @@ dfx start --background
 
 ```bash
 export PRINCIPAL=$(dfx identity get-principal)
-
-dfx deploy governance --argument "(record { quorum = 1; votingPeriod = 15_000_000_000; timelockDelay = 15_000_000_000 })"
 
 dfx deploy icrc1_ledger --argument "(record {
   token_name = \"Token example\";
@@ -44,5 +43,5 @@ dfx deploy icrc1_ledger --argument "(record {
 ### Step 3: Deploy the governance canister:
 
 ```bash
-dfx deploy governance
+dfx deploy governance --argument "(record { quorum = 1; votingPeriod = 15_000_000_000; timelockDelay = 15_000_000_000 })"
 ```
