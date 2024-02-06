@@ -1,24 +1,17 @@
 {
   "canisters": {
     "icrc1_ledger": {
-      "main": "canisters/ledger/icrc1-ledger.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "main": "canisters/ledger/icrc1-ledger.mo"
     },
     "governance": {
+      "type": "motoko",
       "dependencies": ["icrc1_ledger"],
-      "main": "canisters/governance/governance.mo",
-      "type": "motoko"
-    },
-    "website": {
-      "dependencies": ["governance"],
-      "source": ["dist/"],
-      "type": "assets",
-      "frontend": {}
+      "main": "canisters/governance/governance.mo"
     },
     "counter": {
-      "dependencies": ["governance"],
-      "main": "canisters/tests/counter.mo",
-      "type": "motoko"
+      "type": "motoko",
+      "main": "canisters/governance/tests/counter.mo"
     },
     "internet_identity": {
       "type": "custom",
@@ -29,6 +22,12 @@
           "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
         }
       },
+      "frontend": {}
+    },
+    "website": {
+      "type": "assets",
+      "dependencies": ["governance", "internet_identity"],
+      "source": ["dist/"],
       "frontend": {}
     }
   },
