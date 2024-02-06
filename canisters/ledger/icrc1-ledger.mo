@@ -594,4 +594,18 @@ actor class Ledger(init : { initial_mints : [{ account : { owner : Principal; su
   public query func icrc2_allowance({ account : Account; spender : Account }) : async Allowance {
     allowance(account, spender, Nat64.fromNat(Int.abs(Time.now())));
   };
+
+  public query func icrc3_snapshot_balance_of(account : Account, snapshot_time : Timestamp) : async Tokens {
+    balance(
+      account,
+      Buffer.mapFilter<Transaction, Transaction>(
+        log,
+        func(x) = if (x.timestamp <= snapshot_time) {
+          ?(x);
+        } else {
+          null;
+        },
+      ),
+    );
+  };
 };
