@@ -1,20 +1,40 @@
-# Various IDEs and Editors
-.vscode/
-.idea/
-**/*~
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Mac OSX temporary files
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
 .DS_Store
-**/.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# dfx temporary files
-.dfx/
-
-# dfx distribution files
-dist/
-canister_ids.json
-
-node_modules/
-test/
-
+# Canisters
+/src/declarations
+.dfx
+.vessel
 .mops
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+old-src/

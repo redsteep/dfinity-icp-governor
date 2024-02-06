@@ -1,26 +1,67 @@
 {
   "name": "dfinity-icp-contracts",
   "version": "1.0.0",
-  "main": "index.js",
-  "workspaces": {
-    "packages": [
-      "src/frontend"
-    ]
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git@github.com:redsteep/dfinity-icp-contracts.git"
   },
+  "scripts": {
+    "setup": "sh setup.sh",
+    "start": "vite --host --port 3000",
+    "build": "tsc && vite build",
+    "test": "run-s test:backend test:frontend",
+    "test:frontend": "vitest run",
+    "test:backend": "mo-test",
+    "format": "prettier --plugin=prettier-plugin-motoko --write \"src/**/*.{json,js,jsx,ts,tsx,css,scss}\" \"canisters/**/*.mo\"",
+    "sources": "mops sources",
+    "postinstall": "mops install"
+  },
   "dependencies": {
-    "@dfinity/agent": "^0.20.2",
-    "@dfinity/assets": "^0.20.2",
-    "@dfinity/candid": "^0.20.2",
-    "@dfinity/identity": "^0.20.2",
-    "@dfinity/identity-secp256k1": "^0.20.2",
-    "@dfinity/principal": "^0.20.2"
+    "@dfinity/auth-client": "^0.21.4",
+    "@hookform/resolvers": "^3.3.4",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-label": "^2.0.2",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@tanstack/react-query": "^5.18.1",
+    "@tanstack/react-router": "^1.15.19",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.323.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.50.0",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@dfinity/agent": "^0.21.4",
+    "@dfinity/assets": "^0.21.4",
+    "@dfinity/candid": "^0.21.4",
+    "@dfinity/identity": "^0.21.4",
+    "@dfinity/principal": "^0.21.4",
+    "@tanstack/router-vite-plugin": "^1.15.18",
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^14.2.1",
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "cross-fetch": "^4.0.0",
+    "dotenv": "^16.4.1",
+    "ic-mops": "^0.39.2",
+    "jsdom": "^24.0.0",
+    "mo-dev": "^0.12.0",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.34",
+    "prettier": "^3.2.5",
+    "prettier-plugin-motoko": "^0.8.3",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vite-plugin-environment": "^1.1.3",
+    "vitest": "^1.2.2"
   },
   "author": "",
   "license": "ISC"
