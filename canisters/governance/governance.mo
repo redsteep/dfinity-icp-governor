@@ -1,268 +1,246 @@
 import Ledger "canister:icrc1_ledger";
 
+import Array "mo:base/Array";
 import Error "mo:base/Error";
+import IC "mo:base/ExperimentalInternetComputer";
 import Map "mo:base/HashMap";
+import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Nat "mo:base/Nat";
+import Nat64 "mo:base/Nat64";
 import Principal "mo:base/Principal";
+import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
-import Int "mo:base/Int";
-import Array "mo:base/Array";
+import Trie "mo:base/Trie";
 
-actor class Governance(
-  init : {
-    quorum : Nat;
-    votingPeriod : Nat;
-    timelockDelay : Nat;
-  }
-) = this {
+import Types "types";
 
-  public type VoteOption = {
-    #For;
-    #Against;
-  };
+actor class Governance(init : Types.GovernanceInitArgs) = Self {
 
-  public type Vote = {
-    voter : Principal;
-    voteOption : VoteOption;
-    votingPower : Nat;
-  };
+  stable var proposals : Trie.Trie<Nat, Types.Proposal> = Trie.empty();
+  stable var nextProposalId : Nat = 0;
 
-  public type BaseProposal = {
-    id : Nat;
-    proposer : Principal;
-    description : Text;
-    executableCanisterId : Text;
-    createdAt : Time.Time;
-    cancelledAt : ?Time.Time;
-    timelockedUntil : ?Time.Time;
-    executedAt : ?Time.Time;
-    votes : List.List<Vote>;
-  };
-
-  public type ProposalStatus = {
-    #Open;
-    #Approved;
-    #Rejected : {
-      #QuorumNotMet;
-      #RejectedByMajority;
-      #Cancelled;
+  public query func getProposal(
+    proposalId : Nat
+  ) : async Result.Result<Types.Proposal, Text> {
+    switch (getProposalById(proposalId)) {
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (?proposal) #ok(proposal);
     };
-    #Timelocked : Time.Time;
-    #Pending;
-    #Executed;
   };
 
-  public type Proposal = BaseProposal and {
-    status : ProposalStatus;
+  public query func getProposals() : async [Types.Proposal] {
+    Trie.toArray<Nat, Types.Proposal, Types.Proposal>(
+      proposals,
+      func(_, proposal) = {
+        proposal with
+        status = deriveProposalStatus(proposal)
+      },
+    );
   };
-
-  private stable var proposals : [(Nat, BaseProposal)] = [];
-
-  private let proposalMap = Map.fromIter<Nat, BaseProposal>(
-    proposals.vals(),
-    10,
-    Nat.equal,
-    func n = Text.hash(Nat.toText(n)),
-  );
 
   public shared ({ caller }) func propose(
-    description : Text,
-    executableCanisterId : Text,
-  ) : async Proposal {
+    content : Types.ProposalContent,
+    payload : Types.ProposalPayload,
+  ) : async Result.Result<Types.Proposal, Text> {
+    let proposalId = Trie.size(proposals);
+
     if (Principal.isAnonymous(caller)) {
-      throw Error.reject("Anonymous principals are not allowed to propose");
+      return #err("Anonymous principals are not allowed to propose");
     };
 
-    let nextProposalId = proposalMap.size();
-    let newProposal : BaseProposal = {
-      id = nextProposalId;
-      proposer = caller;
-      description;
-      executableCanisterId;
-      createdAt = Time.now();
-      cancelledAt = null;
-      timelockedUntil = null;
-      executedAt = null;
-      votes = List.nil();
-    };
-
-    proposalMap.put(nextProposalId, newProposal);
-    return { newProposal with status = #Open };
+    storeProposal(
+      proposalId,
+      {
+        id = proposalId;
+        content;
+        payload;
+        proposer = caller;
+        createdAt = Time.now();
+        cancelledAt = null;
+        timelockedUntil = null;
+        executedAt = null;
+        votes = List.nil();
+        status = #open;
+      },
+    );
   };
 
   public shared ({ caller }) func castVote(
     proposalId : Nat,
-    voteOption : VoteOption,
-  ) : async () {
-    let proposal = await getProposal(proposalId);
-    if (proposal.status != #Open) {
-      throw Error.reject("Proposal is not open for voting");
+    voteOption : Types.VoteOption,
+  ) : async Result.Result<Types.Proposal, Text> {
+    switch (getProposalById(proposalId)) {
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (?proposal) {
+        if (proposal.status != #open) {
+          return #err("Proposal is not open for voting");
+        };
+        if (List.some<Types.Vote>(proposal.votes, func(vote) = vote.voter == caller)) {
+          return #err("Principal " # Principal.toText(caller) # " already voted");
+        };
+
+        let snapshotTime = Nat64.fromNat(Int.abs(proposal.createdAt));
+        let votingPower = await Ledger.icrc3_snapshot_balance_of(
+          { owner = caller; subaccount = null },
+          snapshotTime,
+        );
+
+        if (votingPower <= 0) {
+          return #err(
+            "Principal " # Principal.toText(caller) # " doesn't have any voting power"
+          );
+        };
+
+        let vote : Types.Vote = {
+          voter = caller;
+          votingPower;
+          voteOption;
+        };
+
+        storeProposal(
+          proposalId,
+          {
+            proposal with
+            votes = List.push<Types.Vote>(vote, proposal.votes)
+          },
+        );
+      };
     };
-
-    // let balance = await Ledger.icrc1_balance_of({
-    //   owner = caller;
-    //   subaccount = null;
-    // });
-
-    let votingPower = 100;
-    if (votingPower <= 0) {
-      throw Error.reject(
-        "Principal " # Principal.toText(caller) # " doesn't have any voting power"
-      );
-    };
-
-    let vote : Vote = {
-      voter = caller;
-      votingPower;
-      voteOption;
-    };
-
-    proposalMap.put(
-      proposalId,
-      {
-        proposal with
-        votes = List.push<Vote>(vote, proposal.votes)
-      },
-    );
   };
 
   public shared ({ caller }) func execute(
     proposalId : Nat
-  ) : async () {
-    let proposal = await getProposal(proposalId);
-    if (proposal.status != #Pending and proposal.status != #Approved) {
-      throw Error.reject("Proposal has not been approved or it's still time-locked");
+  ) : async Result.Result<Types.Proposal, Text> {
+    switch (getProposalById(proposalId)) {
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (?proposal) {
+        if (proposal.status != #pending and proposal.status != #approved) {
+          return #err("Proposal has not been approved or it's still time-locked");
+        };
+
+        if (proposal.status == #approved and init.timelockDelay > 0) {
+          ignore storeProposal(
+            proposalId,
+            {
+              proposal with
+              timelockedUntil = ?(Time.now() + init.timelockDelay)
+            },
+          );
+
+          return #err(
+            "Proposal execution has been time-locked for " # Int.toText(init.timelockDelay / 1000_000_000) # " seconds"
+          );
+        };
+
+        try {
+          let payload = proposal.payload;
+          ignore await IC.call(payload.canisterId, payload.method, payload.data);
+        } catch (error) {
+          return #err(Error.message(error));
+        };
+
+        storeProposal(
+          proposalId,
+          { proposal with executedAt = ?Time.now() },
+        );
+      };
     };
-
-    if (proposal.status == #Approved and init.timelockDelay > 0) {
-      proposalMap.put(
-        proposalId,
-        {
-          proposal with
-          timelockedUntil = ?(Time.now() + init.timelockDelay)
-        },
-      );
-
-      throw Error.reject(
-        "Proposal execution has been time-locked for " # Int.toText(init.timelockDelay / 1000_000_000) # " seconds"
-      );
-    };
-
-    let canister = actor (proposal.executableCanisterId) : actor {
-      execute : () -> async ();
-    };
-    await canister.execute();
-
-    proposalMap.put(
-      proposalId,
-      {
-        proposal with
-        executedAt = ?Time.now()
-      },
-    );
   };
 
   public shared ({ caller }) func cancel(
     proposalId : Nat
-  ) : async () {
-    let proposal = await getProposal(proposalId);
-    if (proposal.proposer != caller) {
-      throw Error.reject(
-        "Only principal " # Principal.toText(proposal.proposer) # " can cancel the proposal"
-      );
-    };
-
-    switch (proposal.status) {
-      case (#Open or #Timelocked _) {
-        proposalMap.put(
-          proposalId,
-          {
-            proposal with
-            cancelledAt = ?Time.now()
-          },
-        );
-      };
-
-      case (_) {
-        throw Error.reject("Only open or time-locked proposals can be cancelled");
-      };
-    };
-  };
-
-  public query func getProposals() : async [Proposal] {
-    Array.map<BaseProposal, Proposal>(
-      Iter.toArray(proposalMap.vals()),
-      func proposal = {
-        proposal with
-        status = getProposalStatus(proposal)
-      },
-    );
-  };
-
-  public query func getProposal(proposalId : Nat) : async Proposal {
-    switch (proposalMap.get(proposalId)) {
-      case (null) throw Error.reject("Invalid proposal ID");
+  ) : async Result.Result<Types.Proposal, Text> {
+    switch (getProposalById(proposalId)) {
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
       case (?proposal) {
-        return {
-          proposal with
-          status = getProposalStatus(proposal)
+        if (proposal.proposer != caller) {
+          return #err(
+            "Only principal " # Principal.toText(proposal.proposer) # " can cancel the proposal"
+          );
+        };
+
+        switch (proposal.status) {
+          case (#open or #timelocked _) {
+            storeProposal(
+              proposalId,
+              { proposal with cancelledAt = ?Time.now() },
+            );
+          };
+
+          case (_) {
+            #err("Only open or time-locked proposals can be cancelled");
+          };
         };
       };
     };
   };
 
-  private func getProposalStatus(baseProposal : BaseProposal) : ProposalStatus {
+  private func getProposalKey(proposalId : Nat) : Trie.Key<Nat> = {
+    key = proposalId;
+    hash = Text.hash(Nat.toText(proposalId));
+  };
+
+  private func getProposalById(proposalId : Nat) : ?Types.Proposal {
+    switch (Trie.get(proposals, getProposalKey(proposalId), Nat.equal)) {
+      case (null) null;
+      case (?proposal) ?{
+        proposal with status = deriveProposalStatus(proposal)
+      };
+    };
+  };
+
+  private func storeProposal(
+    proposalId : Nat,
+    proposal : Types.Proposal,
+  ) : Result.Result<Types.Proposal, Text> {
+    proposals := Trie.put(proposals, getProposalKey(proposalId), Nat.equal, proposal).0;
+    #ok({ proposal with status = deriveProposalStatus(proposal) });
+  };
+
+  private func deriveProposalStatus(baseProposal : Types.Proposal) : Types.ProposalStatus {
     if (baseProposal.executedAt != null) {
-      return #Executed;
+      return #executed;
     };
     if (baseProposal.cancelledAt != null) {
-      return #Rejected(#Cancelled);
+      return #rejected(#cancelled);
     };
     if (baseProposal.createdAt + init.votingPeriod > Time.now()) {
-      return #Open;
+      return #open;
     };
 
     switch (baseProposal.timelockedUntil) {
       case (null) {};
       case (?timelockedUntil) if (timelockedUntil > Time.now()) {
-        return #Timelocked(timelockedUntil);
+        return #timelocked(timelockedUntil);
       } else {
-        return #Pending;
+        return #pending;
       };
     };
 
     if (List.size(baseProposal.votes) < init.quorum) {
-      return #Rejected(#QuorumNotMet);
+      return #rejected(#quorumNotMet);
     };
 
     var votingPowerFor = 0;
     var votingPowerAgainst = 0;
 
-    List.iterate<Vote>(
+    List.iterate<Types.Vote>(
       baseProposal.votes,
       func({ voteOption; votingPower }) {
         switch (voteOption) {
-          case (#For) votingPowerFor += votingPower;
-          case (#Against) votingPowerAgainst += votingPower;
+          case (#for_) votingPowerFor += votingPower;
+          case (#against) votingPowerAgainst += votingPower;
         };
       },
     );
 
     return if (votingPowerFor < votingPowerAgainst) {
-      #Rejected(#RejectedByMajority);
+      #rejected(#rejectedByMajority);
     } else {
-      #Approved;
+      #approved;
     };
-  };
-
-  system func preupgrade() {
-    proposals := Iter.toArray(proposalMap.entries());
-  };
-
-  system func postupgrade() {
-    proposals := [];
   };
 };

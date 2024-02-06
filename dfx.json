@@ -1,5 +1,25 @@
 {
   "canisters": {
+    "icrc1_ledger": {
+      "main": "canisters/ledger/icrc1-ledger.mo",
+      "type": "motoko"
+    },
+    "governance": {
+      "dependencies": ["icrc1_ledger"],
+      "main": "canisters/governance/governance.mo",
+      "type": "motoko"
+    },
+    "website": {
+      "dependencies": ["governance"],
+      "source": ["dist/"],
+      "type": "assets",
+      "frontend": {}
+    },
+    "counter": {
+      "dependencies": ["governance"],
+      "main": "canisters/tests/counter.mo",
+      "type": "motoko"
+    },
     "internet_identity": {
       "type": "custom",
       "candid": "https://github.com/dfinity/internet-identity/releases/download/release-2024-01-05/internet_identity.did",
@@ -10,27 +30,12 @@
         }
       },
       "frontend": {}
-    },
-    "governance": {
-      "main": "src/canisters/governance.mo",
-      "type": "motoko",
-      "dependencies": ["icrc1_ledger"],
-      "declarations": {
-        "node_compatibility": false
-      }
-    },
-    "icrc1_ledger": {
-      "main": "src/canisters/icrc1-ledger.mo",
-      "type": "motoko"
-    },
-    "test_executable": {
-      "main": "src/canisters/test-executable.mo",
-      "type": "motoko"
     }
   },
   "defaults": {
     "build": {
       "packtool": "mops sources"
     }
-  }
+  },
+  "output_env_file": ".env"
 }
