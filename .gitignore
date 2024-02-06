@@ -37,4 +37,8 @@ dist-ssr
 .env.test
 .env.production
 
+# TanStack Router generated files
+/src/routeTree.gen.ts
+
+# Old Remix frontend
 old-src/
