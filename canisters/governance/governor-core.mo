@@ -1,14 +1,9 @@
-import Ledger "canister:icrc1_ledger";
-
-import Array "mo:base/Array";
 import Error "mo:base/Error";
 import IC "mo:base/ExperimentalInternetComputer";
-import Map "mo:base/HashMap";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Nat "mo:base/Nat";
-import Nat64 "mo:base/Nat64";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
@@ -17,7 +12,7 @@ import Trie "mo:base/Trie";
 
 import Types "types";
 
-actor class Governance(init : Types.GovernanceInitArgs) = Self {
+actor class Governor(init : Types.GovernorInitArgs) = Self {
 
   stable var proposals : Trie.Trie<Nat, Types.Proposal> = Trie.empty();
   stable var nextProposalId : Nat = 0;
@@ -26,7 +21,7 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
     switch (getProposalById(proposalId)) {
-      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist.");
       case (?proposal) #ok(proposal);
     };
   };
@@ -47,23 +42,28 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
   ) : async Result.Result<Types.Proposal, Text> {
     let proposalId = Trie.size(proposals);
 
-    if (Principal.isAnonymous(caller)) {
-      return #err("Anonymous principals are not allowed to propose");
-    };
+    // if (Principal.isAnonymous(caller)) {
+    //   return #err("Anonymous principals are not allowed to propose.");
+    // };
+
+    let createdAt = Time.now();
+    let totalSupply = await getPastTotalSupply(createdAt);
+    let quorumNeeded = (totalSupply * init.quorumNumerator) / init.quorumDenominator;
 
     storeProposal(
       proposalId,
       {
         id = proposalId;
-        content;
-        payload;
         proposer = caller;
-        createdAt = Time.now();
+        content = content;
+        payload = payload;
+        status = #open;
+        createdAt = createdAt;
         cancelledAt = null;
         timelockedUntil = null;
         executedAt = null;
         votes = List.nil();
-        status = #open;
+        quorumNeeded;
       },
     );
   };
@@ -73,24 +73,19 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
     voteOption : Types.VoteOption,
   ) : async Result.Result<Types.Proposal, Text> {
     switch (getProposalById(proposalId)) {
-      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist.");
       case (?proposal) {
         if (proposal.status != #open) {
-          return #err("Proposal is not open for voting");
+          return #err("Proposal is not open for voting.");
         };
         if (List.some<Types.Vote>(proposal.votes, func(vote) = vote.voter == caller)) {
-          return #err("Principal " # Principal.toText(caller) # " already voted");
+          return #err("Principal " # Principal.toText(caller) # " already voted.");
         };
 
-        let snapshotTime = Nat64.fromNat(Int.abs(proposal.createdAt));
-        let votingPower = await Ledger.icrc3_snapshot_balance_of(
-          { owner = caller; subaccount = null },
-          snapshotTime,
-        );
-
+        let votingPower = await getPastVotes(caller, proposal.createdAt);
         if (votingPower <= 0) {
           return #err(
-            "Principal " # Principal.toText(caller) # " doesn't have any voting power"
+            "Principal " # Principal.toText(caller) # " doesn't have any voting power."
           );
         };
 
@@ -115,23 +110,23 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
     switch (getProposalById(proposalId)) {
-      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist.");
       case (?proposal) {
         if (proposal.status != #pending and proposal.status != #approved) {
-          return #err("Proposal has not been approved or it's still time-locked");
+          return #err("Proposal has not been approved or it's still time-locked.");
         };
 
-        if (proposal.status == #approved and init.timelockDelay > 0) {
+        if (proposal.status == #approved and init.timelockDelayNs > 0) {
           ignore storeProposal(
             proposalId,
             {
               proposal with
-              timelockedUntil = ?(Time.now() + init.timelockDelay)
+              timelockedUntil = ?(Time.now() + init.timelockDelayNs)
             },
           );
 
           return #err(
-            "Proposal execution has been time-locked for " # Int.toText(init.timelockDelay / 1000_000_000) # " seconds"
+            "Proposal execution has been time-locked for " # Int.toText(init.timelockDelayNs / 1000_000_000) # " seconds."
           );
         };
 
@@ -154,11 +149,11 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
     switch (getProposalById(proposalId)) {
-      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist");
+      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist.");
       case (?proposal) {
         if (proposal.proposer != caller) {
           return #err(
-            "Only principal " # Principal.toText(proposal.proposer) # " can cancel the proposal"
+            "Only principal " # Principal.toText(proposal.proposer) # " can cancel the proposal."
           );
         };
 
@@ -171,11 +166,21 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
           };
 
           case (_) {
-            #err("Only open or time-locked proposals can be cancelled");
+            #err("Only open or time-locked proposals can be cancelled.");
           };
         };
       };
     };
+  };
+
+  public shared func getPastTotalSupply(timepoint : Time.Time) : async Nat {
+    let votesActor = actor (init.governorVotesCanisterId) : Types.GovernorVotes;
+    await votesActor.getPastTotalSupply(timepoint);
+  };
+
+  public shared func getPastVotes(account : Principal, timepoint : Time.Time) : async Nat {
+    let votesActor = actor (init.governorVotesCanisterId) : Types.GovernorVotes;
+    await votesActor.getPastVotes(account, timepoint);
   };
 
   private func getProposalKey(proposalId : Nat) : Trie.Key<Nat> = {
@@ -200,18 +205,18 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
     #ok({ proposal with status = deriveProposalStatus(proposal) });
   };
 
-  private func deriveProposalStatus(baseProposal : Types.Proposal) : Types.ProposalStatus {
-    if (baseProposal.executedAt != null) {
+  private func deriveProposalStatus(proposal : Types.Proposal) : Types.ProposalStatus {
+    if (proposal.executedAt != null) {
       return #executed;
     };
-    if (baseProposal.cancelledAt != null) {
+    if (proposal.cancelledAt != null) {
       return #rejected(#cancelled);
     };
-    if (baseProposal.createdAt + init.votingPeriod > Time.now()) {
+    if (proposal.createdAt + init.votingPeriodNs > Time.now()) {
       return #open;
     };
 
-    switch (baseProposal.timelockedUntil) {
+    switch (proposal.timelockedUntil) {
       case (null) {};
       case (?timelockedUntil) if (timelockedUntil > Time.now()) {
         return #timelocked(timelockedUntil);
@@ -220,15 +225,11 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
       };
     };
 
-    if (List.size(baseProposal.votes) < init.quorum) {
-      return #rejected(#quorumNotMet);
-    };
-
     var votingPowerFor = 0;
     var votingPowerAgainst = 0;
 
     List.iterate<Types.Vote>(
-      baseProposal.votes,
+      proposal.votes,
       func({ voteOption; votingPower }) {
         switch (voteOption) {
           case (#for_) votingPowerFor += votingPower;
@@ -236,6 +237,10 @@ actor class Governance(init : Types.GovernanceInitArgs) = Self {
         };
       },
     );
+
+    if ((votingPowerFor + votingPowerAgainst) < proposal.quorumNeeded) {
+      return #rejected(#quorumNotMet);
+    };
 
     return if (votingPowerFor < votingPowerAgainst) {
       #rejected(#rejectedByMajority);

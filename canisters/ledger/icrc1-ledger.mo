@@ -595,17 +595,33 @@ actor class Ledger(init : { initial_mints : [{ account : { owner : Principal; su
     allowance(account, spender, Nat64.fromNat(Int.abs(Time.now())));
   };
 
-  public query func icrc3_snapshot_balance_of(account : Account, snapshot_time : Timestamp) : async Tokens {
+  public query func icrc3_past_balance_of({
+    account : Account;
+    timepoint : Timestamp;
+  }) : async Tokens {
     balance(
       account,
       Buffer.mapFilter<Transaction, Transaction>(
         log,
-        func(x) = if (x.timestamp <= snapshot_time) {
+        func(x) = if (x.timestamp <= timepoint) {
           ?(x);
         } else {
           null;
         },
       ),
+    );
+  };
+
+  public query func icrc3_past_total_supply(timepoint : Timestamp) : async Tokens {
+    totalSupply(
+      Buffer.mapFilter<Transaction, Transaction>(
+        log,
+        func(x) = if (x.timestamp <= timepoint) {
+          ?(x);
+        } else {
+          null;
+        },
+      )
     );
   };
 };

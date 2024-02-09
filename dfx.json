@@ -1,17 +1,29 @@
 {
   "canisters": {
-    "icrc1_ledger": {
+    "governor": {
       "type": "motoko",
-      "main": "canisters/ledger/icrc1-ledger.mo"
+      "main": "canisters/governance/governor-core.mo",
+      "init_arg": "(record { governorVotesCanisterId = principal \"2vxsx-fae\"; quorumNumerator = 1; quorumDenominator = 100; votingPeriodNs = 30_000_000_000; timelockDelayNs = 10_000_000_000 })"
     },
-    "governance": {
+    "governor_votes": {
       "type": "motoko",
       "dependencies": ["icrc1_ledger"],
-      "main": "canisters/governance/governance.mo"
+      "main": "canisters/governance/governor-votes.mo"
     },
     "counter": {
       "type": "motoko",
-      "main": "canisters/governance/tests/counter.mo"
+      "main": "canisters/governance/tests/counter.mo",
+      "remote": {
+        "id": {
+          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
+        }
+      }
+    },
+    "website": {
+      "type": "assets",
+      "dependencies": ["governor", "internet_identity"],
+      "source": ["dist/"],
+      "frontend": {}
     },
     "internet_identity": {
       "type": "custom",
@@ -24,11 +36,9 @@
       },
       "frontend": {}
     },
-    "website": {
-      "type": "assets",
-      "dependencies": ["governance", "internet_identity"],
-      "source": ["dist/"],
-      "frontend": {}
+    "icrc1_ledger": {
+      "type": "motoko",
+      "main": "canisters/ledger/icrc1-ledger.mo"
     }
   },
   "defaults": {

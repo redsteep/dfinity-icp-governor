@@ -3,10 +3,17 @@ import List "mo:base/List";
 import Principal "mo:base/Principal";
 
 module {
-  public type GovernanceInitArgs = {
-    quorum : Nat;
-    votingPeriod : Nat;
-    timelockDelay : Nat;
+  public type GovernorVotes = actor {
+    getPastTotalSupply : shared (Time.Time) -> async Nat;
+    getPastVotes : shared (Principal, Time.Time) -> async Nat;
+  };
+
+  public type GovernorInitArgs = {
+    governorVotesCanisterId : Text;
+    votingPeriodNs : Nat;
+    timelockDelayNs : Nat;
+    quorumNumerator : Nat;
+    quorumDenominator : Nat;
   };
 
   public type ProposalContent = {
@@ -49,11 +56,12 @@ module {
     proposer : Principal;
     content : ProposalContent;
     payload : ProposalPayload;
+    status : ProposalStatus;
     createdAt : Time.Time;
     cancelledAt : ?Time.Time;
     timelockedUntil : ?Time.Time;
     executedAt : ?Time.Time;
     votes : List.List<Vote>;
-    status : ProposalStatus;
+    quorumNeeded : Nat;
   };
 };
