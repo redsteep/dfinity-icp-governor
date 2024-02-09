@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 
-import { TanStackRouterVite } from "@tanstack/router-vite-plugin";
+import { TanStackRouterVite as tanStackRouter } from "@tanstack/router-vite-plugin";
 import react from "@vitejs/plugin-react";
 import dotenv from "dotenv";
 import path from "path";
@@ -37,7 +37,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    TanStackRouterVite(),
+    tanStackRouter(),
     environment("all", { prefix: "CANISTER_" }),
     environment("all", { prefix: "DFX_" }),
     environment({ BACKEND_CANISTER_ID: "" }),

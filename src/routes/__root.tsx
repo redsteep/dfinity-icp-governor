@@ -1,18 +1,39 @@
-import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
+import {
+  createRootRoute,
+  createRootRouteWithContext,
+  Outlet,
+} from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
+import { NavigationBar } from "~/components/layout/navigation-bar";
+import { Separator } from "~/components/ui/separator";
+import { Toaster } from "~/components/ui/toaster";
 
-export const Route = createRootRoute({
-  component: () => (
-    <>
-      <div className="flex gap-2 p-2">
-        <Link to="/" className="[&.active]:font-bold">
-          Home
-        </Link>{" "}
-        {/* <Link to="/about" className="[&.active]:font-bold">
-          About
-        </Link> */}
-      </div>
-      <hr />
-      <Outlet />
-    </>
-  ),
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+}>()({
+  component: RootComponent,
 });
+
+const TanStackRouterDevtools =
+  process.env.NODE_ENV === "production"
+    ? () => null // Render nothing in production
+    : lazy(() =>
+        import("@tanstack/router-devtools").then((res) => ({
+          default: res.TanStackRouterDevtools,
+        })),
+      );
+
+function RootComponent() {
+  return (
+    <>
+      <NavigationBar />
+      <Separator />
+      <Outlet />
+      <Toaster />
+      <Suspense>
+        <TanStackRouterDevtools />
+      </Suspense>
+    </>
+  );
+}

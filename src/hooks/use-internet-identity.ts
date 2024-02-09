@@ -1,6 +1,7 @@
 import { Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 const IDENTITY_PROVIDER =
   process.env.DFX_NETWORK === "ic"
@@ -16,20 +17,33 @@ export function useInternetIdentity() {
   });
 
   const {
-    data: { identity, isAuthenticated },
+    data: { identity, principal, isAuthenticated },
     refetch,
   } = useQuery<{
     identity?: Identity;
+    principal?: string;
     isAuthenticated: boolean;
   }>({
     queryKey: ["auth-client", "auth-state"],
-    queryFn: async () => ({
-      identity: authClient!.getIdentity(),
-      isAuthenticated: await authClient!.isAuthenticated(),
-    }),
-    initialData: { isAuthenticated: false },
+    queryFn: async () => {
+      const identity = authClient!.getIdentity();
+      return {
+        identity,
+        principal: identity.getPrincipal().toText(),
+        isAuthenticated: await authClient!.isAuthenticated(),
+      };
+    },
     enabled: Boolean(authClient),
+    initialData: { isAuthenticated: false },
+    staleTime: Infinity,
   });
+
+  // useEffect(() => {
+  //   if (authClient && identity) {
+  //     authClient.idleManager?.registerCallback(() => refetch());
+  //     return () => authClient.idleManager?.exit();
+  //   }
+  // }, [authClient, identity]);
 
   const {
     mutate: login,
@@ -56,6 +70,7 @@ export function useInternetIdentity() {
   return {
     error,
     identity,
+    principal,
     isAuthenticating,
     isAuthenticated,
     login,
