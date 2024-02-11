@@ -4,15 +4,18 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { disposeOnQueryCacheEviction } from "~/lib/dispose-on-query-cache-eviction";
 import { routeTree } from "~/routeTree.gen";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 15_000,
+const queryClient = disposeOnQueryCacheEviction(
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 15_000,
+      },
     },
-  },
-});
+  }),
+);
 
 const router = createRouter({
   routeTree,

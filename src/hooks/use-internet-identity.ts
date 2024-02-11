@@ -1,7 +1,5 @@
-import { Identity } from "@dfinity/agent";
 import { AuthClient } from "@dfinity/auth-client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 
 const IDENTITY_PROVIDER =
   process.env.DFX_NETWORK === "ic"
@@ -16,43 +14,25 @@ export function useInternetIdentity() {
     gcTime: Infinity,
   });
 
-  const {
-    data: { identity, principal, isAuthenticated },
-    refetch,
-  } = useQuery<{
-    identity?: Identity;
-    principal?: string;
-    isAuthenticated: boolean;
-  }>({
-    queryKey: ["auth-client", "auth-state"],
+  const { data: identityData, refetch } = useQuery({
+    queryKey: ["auth-client", "identity"],
     queryFn: async () => {
       const identity = authClient!.getIdentity();
+      const isAuthenticated = await authClient!.isAuthenticated();
+
       return {
         identity,
-        principal: identity.getPrincipal().toText(),
-        isAuthenticated: await authClient!.isAuthenticated(),
+        isAuthenticated,
       };
     },
     enabled: Boolean(authClient),
-    initialData: { isAuthenticated: false },
     staleTime: Infinity,
   });
 
-  // useEffect(() => {
-  //   if (authClient && identity) {
-  //     authClient.idleManager?.registerCallback(() => refetch());
-  //     return () => authClient.idleManager?.exit();
-  //   }
-  // }, [authClient, identity]);
-
-  const {
-    mutate: login,
-    isPending: isAuthenticating,
-    error,
-  } = useMutation({
+  const { mutate: login, isPending: isAuthenticating } = useMutation({
     mutationFn: () => {
       return new Promise((resolve, reject) => {
-        authClient!.login({
+        authClient?.login({
           identityProvider: IDENTITY_PROVIDER,
           onSuccess: () => resolve(authClient!.getIdentity()),
           onError: reject,
@@ -68,11 +48,9 @@ export function useInternetIdentity() {
   });
 
   return {
-    error,
-    identity,
-    principal,
+    identity: identityData?.identity,
+    isAuthenticated: identityData?.isAuthenticated ?? false,
     isAuthenticating,
-    isAuthenticated,
     login,
     logout,
   };

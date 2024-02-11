@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import path from "path";
 import { defineConfig } from "vite";
 import environment from "vite-plugin-environment";
+import topLevelAwait from "vite-plugin-top-level-await";
+import wasm from "vite-plugin-wasm";
 
 dotenv.config();
 
@@ -37,10 +39,12 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    topLevelAwait(),
     tanStackRouter(),
     environment("all", { prefix: "CANISTER_" }),
     environment("all", { prefix: "DFX_" }),
     environment({ BACKEND_CANISTER_ID: "" }),
+    wasm(),
   ],
   test: {
     environment: "jsdom",

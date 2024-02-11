@@ -1,11 +1,12 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, PartyPopper, XOctagon } from "lucide-react";
+import { CheckCircle2, XOctagon } from "lucide-react";
 import { useMemo } from "react";
 import { P, match } from "ts-pattern";
 import { Section } from "~/components/layout/section";
-import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
+import { ProposalPayload } from "~/declarations/governor/governor.did";
+import { useCandidParser } from "~/hooks/use-candid-parser";
 import {
   fromList,
   fromNullableTimestamp,
@@ -149,32 +150,53 @@ function ProposalComponent() {
           </Section>
         )}
 
-        <Section className="md:col-span-3" title="Executable payload">
-          <pre className="flex flex-col p-4 rounded-md bg-secondary">
-            <code>
-              Canister ID:{" "}
-              <span className="font-semibold text-muted-foreground">
-                {proposal.payload.canisterId.toText()}
-              </span>
-            </code>
-
-            <code>
-              Method:{" "}
-              <span className="font-semibold text-muted-foreground">
-                {proposal.payload.method}
-              </span>
-            </code>
-
-            <code>
-              Data:{" "}
-              <span className="font-semibold text-muted-foreground">
-                {proposal.payload.data}
-              </span>
-            </code>
-          </pre>
-        </Section>
+        <ExecutablePayloadSection payload={proposal.payload} />
       </div>
     </div>
+  );
+}
+
+function ExecutablePayloadSection({ payload }: { payload: ProposalPayload }) {
+  const candidParser = useCandidParser(payload.canisterId.toText());
+
+  let decodedIdlArgs;
+
+  try {
+    decodedIdlArgs = candidParser?.decodeIdlArgs(
+      payload.method,
+      payload.data instanceof Uint8Array
+        ? payload.data
+        : new Uint8Array(payload.data),
+    );
+  } catch (error) {
+    decodedIdlArgs = "Failed to decode.";
+  }
+
+  return (
+    <Section className="md:col-span-3" title="Executable payload">
+      <pre className="flex flex-col p-4 rounded-md bg-secondary">
+        <code>
+          Canister ID:{" "}
+          <span className="font-semibold text-muted-foreground">
+            {payload.canisterId.toText()}
+          </span>
+        </code>
+
+        <code>
+          Method:{" "}
+          <span className="font-semibold text-muted-foreground">
+            {payload.method}
+          </span>
+        </code>
+
+        <code>
+          Data:{" "}
+          <span className="font-semibold text-muted-foreground">
+            {decodedIdlArgs}
+          </span>
+        </code>
+      </pre>
+    </Section>
   );
 }
 

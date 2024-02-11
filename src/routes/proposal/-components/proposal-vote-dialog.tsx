@@ -1,7 +1,6 @@
 import { Actor } from "@dfinity/agent";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { Loader2, PenLineIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

@@ -1,9 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import {
-  createRootRoute,
-  createRootRouteWithContext,
-  Outlet,
-} from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { NavigationBar } from "~/components/layout/navigation-bar";
 import { Separator } from "~/components/ui/separator";

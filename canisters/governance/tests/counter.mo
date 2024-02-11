@@ -7,8 +7,8 @@ actor Counter {
     value;
   };
 
-  public shared func increment() : async Nat {
-    value += 1;
+  public shared func increment({ by : Nat }) : async Nat {
+    value += by;
     value;
   };
 };

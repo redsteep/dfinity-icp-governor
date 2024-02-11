@@ -22,8 +22,9 @@ import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { useToast } from "~/components/ui/use-toast";
 import { governor } from "~/declarations/governor";
+import { useCandidParser } from "~/hooks/use-candid-parser";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
-import { fromHexString, fromOptional, toOptional } from "~/lib/candid-utils";
+import { toOptional } from "~/lib/candid-utils";
 
 const formSchema = z.object({
   title: z
@@ -53,9 +54,30 @@ function CreateProposalComponent() {
   const { identity, isAuthenticated } = useInternetIdentity();
   const { toast } = useToast();
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: `[TEST] Test Proposal #${Math.round(Date.now() / 1000)}`,
+      description:
+        "This is supposed be a long description for a proposal that describes something, blah-blah-blah",
+      canisterId: "bw4dl-smaaa-aaaaa-qaacq-cai",
+      methodName: "increment",
+      arguments: "(record {by = 3})",
+    },
+  });
+
+  const canisterId = form.watch("canisterId");
+  const candidParser = useCandidParser(canisterId);
+
   const { mutate: propose, isPending: isSubmitting } = useMutation({
-    mutationFn: (data: z.infer<typeof formSchema>) => {
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
       Actor.agentOf(governor)?.replaceIdentity?.(identity!);
+
+      const encodedArguments =
+        candidParser?.encodeIdlArgs(data.methodName, data.arguments ?? "()") ??
+        // Encoded empty `()` argument
+        new Uint8Array([68, 73, 68, 76, 0, 0]);
+
       return governor.propose(
         {
           title: data.title,
@@ -64,7 +86,7 @@ function CreateProposalComponent() {
         {
           canisterId: Principal.fromText(data.canisterId),
           method: data.methodName,
-          data: fromHexString(data.arguments ?? "4449444c0000"),
+          data: encodedArguments,
         },
       );
     },
@@ -95,18 +117,6 @@ function CreateProposalComponent() {
           params: { proposalId: data.ok.id },
         });
       }
-    },
-  });
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: `[TEST] Test Proposal #${Math.round(Date.now() / 1000)}`,
-      description:
-        "This is supposed be a long description for a proposal that describes something, blah-blah-blah",
-      canisterId: "bw4dl-smaaa-aaaaa-qaacq-cai",
-      methodName: "increment",
-      arguments: "4449444c0000",
     },
   });
 
