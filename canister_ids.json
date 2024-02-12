@@ -1,8 +1,4 @@
 {
-  "governance": {
-    "ic": "5j7t7-giaaa-aaaak-afira-cai"
-  },
-  "icrc1-ledger": {
-    "ic": "5o6vl-lqaaa-aaaak-afirq-cai"
-  }
+  "governance": {},
+  "icrc1-ledger": {}
 }

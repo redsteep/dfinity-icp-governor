@@ -4,13 +4,13 @@ import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import List "mo:base/List";
 import Nat "mo:base/Nat";
+import Nat64 "mo:base/Nat64";
+import Option "mo:base/Option";
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
-import Option "mo:base/Option";
-import Nat64 "mo:base/Nat64";
 
 import Types "types";
 
@@ -25,9 +25,9 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     content : Types.ProposalContent,
     payload : Types.ProposalPayload,
   ) : async Result.Result<Types.Proposal, Text> {
-    // if (Principal.isAnonymous(caller)) {
-    //   return #err("Anonymous principals are not allowed to propose.");
-    // };
+    if (Principal.isAnonymous(caller)) {
+      return #err("Anonymous principals are not allowed to propose.");
+    };
 
     let proposalId = Trie.size(proposals);
     let createdAt = Time.now();
