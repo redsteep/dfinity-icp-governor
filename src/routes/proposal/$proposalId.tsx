@@ -14,6 +14,6 @@ export const Route = createFileRoute("/proposal/$proposalId")({
   }),
   loader: ({ context, params }) =>
     context.queryClient.ensureQueryData(
-      getProposalByIdQueryOptions(BigInt(params.proposalId)),
+      getProposalByIdQueryOptions(params.proposalId),
     ),
 });

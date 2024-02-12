@@ -51,7 +51,9 @@ function ProposalTableRow({ proposal }: { proposal: Proposal }) {
       <div className="col-span-3">
         <Link
           to="/proposal/$proposalId"
-          params={{ proposalId: proposal.id }}
+          // bug(@tanstack/router): router filters out falsy parameters after stringifying them,
+          // so for `proposalId = 0n` the path gets fucked up and as a result we get a 404.
+          params={{ proposalId: String(proposal.id) as unknown as bigint }}
           className="pb-1 text-lg font-medium text-black line-clamp-1"
         >
           {proposal.content.title}

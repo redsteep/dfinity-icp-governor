@@ -19,10 +19,7 @@ export function ProposalStatusBadge({
     .with({ open: null }, () => ["bg-sky-200 text-sky-900", "Open"])
     .with({ pending: null }, () => ["bg-violet-200 text-violet-900", "Pending"])
     .with({ rejected: P._ }, () => ["bg-red-200 text-red-900", "Rejected"])
-    .with({ timelocked: P._ }, () => [
-      "bg-orange-200 text-orange-900",
-      "Timelocked",
-    ])
+    .with({ queued: P._ }, () => ["bg-orange-200 text-orange-900", "Queued"])
     .exhaustive();
 
   return (

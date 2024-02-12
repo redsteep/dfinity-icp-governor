@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, XOctagon } from "lucide-react";
+import { CheckCircle2, Loader2, XOctagon } from "lucide-react";
 import { useMemo } from "react";
 import { P, match } from "ts-pattern";
 import { Section } from "~/components/layout/section";
@@ -54,12 +54,9 @@ function ProposalComponent() {
         </div>
 
         {match(proposal.status)
-          .with(
-            { approved: null },
-            { timelocked: P._ },
-            { pending: null },
-            () => <ProposalExecuteButton proposalId={proposal.id} />,
-          )
+          .with({ approved: null }, { queued: P._ }, () => (
+            <ProposalExecuteButton proposalId={proposal.id} />
+          ))
           .with({ open: null }, () => (
             <ProposalVoteDialog
               proposalId={proposal.id}
@@ -95,7 +92,7 @@ function DetailsSection({ proposal }: { proposal: Proposal }) {
             .with({ open: null }, () => "Open")
             .with({ pending: null }, () => "Pending")
             .with({ rejected: P._ }, () => "Rejected")
-            .with({ timelocked: P._ }, () => "Timelocked")
+            .with({ queued: P._ }, () => "Queued")
             .exhaustive()}
         />
         <DetailRow
@@ -202,15 +199,17 @@ function ExecutablePayloadSection({ payload }: { payload: ProposalPayload }) {
 
   let decodedIdlArgs;
 
-  try {
-    decodedIdlArgs = candidParser?.decodeIdlArgs(
-      payload.method,
-      payload.data instanceof Uint8Array
-        ? payload.data
-        : new Uint8Array(payload.data),
-    );
-  } catch (error) {
-    decodedIdlArgs = "Failed to decode.";
+  if (candidParser) {
+    try {
+      decodedIdlArgs = candidParser.decodeIdlArgs(
+        payload.method,
+        payload.data instanceof Uint8Array
+          ? payload.data
+          : new Uint8Array(payload.data),
+      );
+    } catch (error) {
+      decodedIdlArgs = "Failed to decode.";
+    }
   }
 
   return (
@@ -232,9 +231,13 @@ function ExecutablePayloadSection({ payload }: { payload: ProposalPayload }) {
 
         <code>
           Data:{" "}
-          <span className="font-semibold text-muted-foreground">
-            {decodedIdlArgs}
-          </span>
+          {candidParser ? (
+            <span className="font-semibold text-muted-foreground">
+              {decodedIdlArgs}
+            </span>
+          ) : (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          )}
         </code>
       </pre>
     </Section>
