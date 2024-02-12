@@ -1,10 +1,9 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Loader2, XOctagon } from "lucide-react";
+import { CheckCircle2, Loader2, Users, XOctagon } from "lucide-react";
 import { useMemo } from "react";
 import { P, match } from "ts-pattern";
 import { Section } from "~/components/layout/section";
-import { Separator } from "~/components/ui/separator";
 import type {
   Proposal,
   ProposalPayload,
@@ -23,7 +22,10 @@ import { dateFormat, numberFormat } from "~/lib/intl-format";
 import { ProposalExecuteButton } from "~/routes/proposal/-components/proposal-execute-button";
 import { ProposalStatusBadge } from "~/routes/proposal/-components/proposal-status-badge";
 import { ProposalVoteDialog } from "~/routes/proposal/-components/proposal-vote-dialog";
-import { getProposalByIdQueryOptions } from "~/services/governance";
+import {
+  getGovernorSystemParamsQueryOptions,
+  getProposalByIdQueryOptions,
+} from "~/services/governance";
 
 export const Route = createLazyFileRoute("/proposal/$proposalId")({
   component: ProposalComponent,
@@ -68,7 +70,10 @@ function ProposalComponent() {
 
       <div className="grid gap-6 md:grid-cols-3">
         <DetailsSection proposal={proposal} />
-        <VotesSection votes={proposal.votes} />
+        <VotesSection
+          quorumThreshold={proposal.quorumThreshold}
+          votes={proposal.votes}
+        />
         <DescriptionSection description={proposal.content.description} />
         <ExecutablePayloadSection payload={proposal.payload} />
       </div>
@@ -81,9 +86,13 @@ function DetailsSection({ proposal }: { proposal: Proposal }) {
   const executedAt = fromNullableTimestamp(proposal.executedAt);
   const cancelledAt = fromNullableTimestamp(proposal.cancelledAt);
 
+  const { data: systemParams } = useQuery(
+    getGovernorSystemParamsQueryOptions(),
+  );
+
   return (
     <Section className="md:col-span-2" title="Details">
-      <div className="p-4 font-semibold *:border-b *:py-3 first:*:pt-0 last:*:pb-0 last:*:border-b-0">
+      <div className="px-4 *:py-3 text-base font-semibold last:*:border-b-0">
         <DetailRow
           leftValue="Status"
           rightValue={match(proposal.status)
@@ -103,6 +112,10 @@ function DetailsSection({ proposal }: { proposal: Proposal }) {
           leftValue="Proposed on"
           rightValue={dateFormat.format(createdAt)}
         />
+        {/* <DetailRow
+          leftValue="Open unti"
+          rightValue={dateFormat.format(proposal. systemParams?.votingDelayNs)}
+        /> */}
         {cancelledAt && (
           <DetailRow
             leftValue="Cancelled on"
@@ -128,14 +141,20 @@ function DetailRow({
   rightValue: string;
 }) {
   return (
-    <div className="flex flex-row items-center justify-between">
+    <div className="flex flex-row items-center justify-between border-b">
       <span className="text-muted-foreground">{leftValue}</span>
-      <span>{rightValue}</span>
+      <span className="text-right">{rightValue}</span>
     </div>
   );
 }
 
-function VotesSection({ votes }: { votes: List<Vote> }) {
+function VotesSection({
+  quorumThreshold,
+  votes,
+}: {
+  quorumThreshold: bigint;
+  votes: List<Vote>;
+}) {
   const { votesFor, votesAgainst } = useMemo(() => {
     let votesFor = 0n;
     let votesAgainst = 0n;
@@ -155,21 +174,30 @@ function VotesSection({ votes }: { votes: List<Vote> }) {
 
   return (
     <Section className="md:col-span-1" title="Votes">
-      <div className="p-4 space-y-3">
-        <div className="flex flex-row items-center justify-between text-base font-semibold">
-          <span className="flex flex-row items-center justify-between text-emerald-500">
+      <div className="px-4 *:py-3 text-base font-semibold *:border-b last:*:border-b-0">
+        <div className="flex flex-row items-center justify-between">
+          <span className="flex flex-row items-center text-muted-foreground">
+            <Users className="w-4 h-4 mr-2" />
+            <span>Quorum</span>
+          </span>
+          <span>
+            {numberFormat.format(votesFor + votesAgainst)} of{" "}
+            {numberFormat.format(quorumThreshold)}
+          </span>
+        </div>
+
+        <div className="flex flex-row items-center justify-between">
+          <span className="flex flex-row items-center text-emerald-500">
             <CheckCircle2 className="w-4 h-4 mr-2" />
-            For
+            <span>For</span>
           </span>
           <span>{numberFormat.format(votesFor)}</span>
         </div>
 
-        <Separator />
-
-        <div className="flex flex-row items-center justify-between text-base font-semibold">
-          <span className="flex flex-row items-center justify-between text-red-500">
+        <div className="flex flex-row items-center justify-between">
+          <span className="flex flex-row items-center text-red-500">
             <XOctagon className="w-4 h-4 mr-2" />
-            Against
+            <span>Against</span>
           </span>
           <span>{numberFormat.format(votesAgainst)}</span>
         </div>

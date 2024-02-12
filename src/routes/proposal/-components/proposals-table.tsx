@@ -15,7 +15,9 @@ export function ProposalsTable({ proposals }: { proposals: Proposal[] }) {
         <div className="col-span-3">Proposal</div>
         <div className="col-span-1">Votes for</div>
         <div className="col-span-1">Votes against</div>
-        <div className="col-span-1 text-right">Total votes</div>
+        <div className="hidden col-span-1 text-right md:inline-grid">
+          Total votes
+        </div>
       </div>
 
       {proposals.map((proposal) => (

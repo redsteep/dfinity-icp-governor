@@ -13,7 +13,7 @@ export const Progress = React.forwardRef<
 >(({ className, value, ...props }, ref) => (
   <div
     ref={ref}
-    className="relative h-[6px] w-full overflow-hidden rounded-full bg-secondary"
+    className="relative h-[6px] w-full overflow-hidden rounded-full bg-muted/50 outline outline-muted outline-1"
     {...props}
   >
     <div
