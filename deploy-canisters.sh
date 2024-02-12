@@ -26,16 +26,16 @@ dfx deploy icrc1_ledger --argument "(record {
 #   amount = 5_000_000;
 # })"
 
-dfx deploy governor_votes
-
-GOVERNOR_VOTES_CANISTER_ID=$(dfx canister id governor_votes)
-
 dfx deploy governor --argument "(record {
-  governorVotesCanisterId = \"$GOVERNOR_VOTES_CANISTER_ID\";
-  votingPeriodNs = 30_000_000_000;
-  timelockDelayNs = 15_000_000_000;
-  quorumNumerator = 1;
-  quorumDenominator = 100;
+  ledgerCanisterId = principal \"$(dfx canister id icrc1_ledger)\";
+  systemParams = record {
+    votingDelayNs = 0;
+    votingPeriodNs = 30_000_000_000;
+    timelockDelayNs = 15_000_000_000;
+    quorumThreshold = 1;
+    proposalThreshold = 1;
+    guardian = opt principal \"$PRINCIPAL\";
+  };
 })"
 
 dfx deploy counter

@@ -2,13 +2,7 @@
   "canisters": {
     "governor": {
       "type": "motoko",
-      "main": "canisters/governance/governor-core.mo",
-      "init_arg": "(record { governorVotesCanisterId = principal \"2vxsx-fae\"; quorumNumerator = 1; quorumDenominator = 100; votingPeriodNs = 30_000_000_000; timelockDelayNs = 10_000_000_000 })"
-    },
-    "governor_votes": {
-      "type": "motoko",
-      "dependencies": ["icrc1_ledger"],
-      "main": "canisters/governance/governor-votes.mo"
+      "main": "canisters/governance/governor.mo"
     },
     "counter": {
       "type": "motoko",
