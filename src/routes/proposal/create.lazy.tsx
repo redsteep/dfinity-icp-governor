@@ -1,12 +1,12 @@
 import { Actor } from "@dfinity/agent";
 import { Principal } from "@dfinity/principal";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, useRouter } from "@tanstack/react-router";
 import { Loader2, ScrollIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { P, match } from "ts-pattern";
-import { z } from "zod";
+import * as v from "valibot";
 import { Section } from "~/components/layout/section";
 import { Button } from "~/components/ui/button";
 import {
@@ -26,21 +26,21 @@ import { useCandidParser } from "~/hooks/use-candid-parser";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
 import { toOptional } from "~/lib/candid-utils";
 
-const formSchema = z.object({
-  title: z
-    .string({ required_error: "Title is required." })
-    .min(8, "Title length should be longer than 8 characters.")
-    .max(128, "Title length should be less than 128 characters."),
-  description: z
-    .string({ required_error: "Description is required." })
-    .min(32, "Description length should be longer than 32 characters."),
-  canisterId: z
-    .string({ required_error: "Canister ID is required." })
-    .min(8, "Invalid canister ID"),
-  methodName: z
-    .string({ required_error: "Method name is required." })
-    .min(1, "Invalid method name."),
-  arguments: z.string().optional(),
+const formSchema = v.object({
+  title: v.string("Title is required.", [
+    v.minLength(8, "Title length should be longer than 8 characters."),
+    v.maxLength(128, "Title length should be less than 128 characters."),
+  ]),
+  description: v.string("Description is required.", [
+    v.minLength(16, "Description length should be longer than 16 characters."),
+  ]),
+  canisterId: v.string("Canister ID is required.", [
+    v.minLength(8, "Invalid Canister ID."),
+  ]),
+  methodName: v.string("Method name is required.", [
+    v.minLength(1, "Invalid method name."),
+  ]),
+  arguments: v.optional(v.string()),
 });
 
 export const Route = createLazyFileRoute("/proposal/create")({
@@ -54,8 +54,8 @@ function CreateProposalComponent() {
   const { identity, isAuthenticated } = useInternetIdentity();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<v.Output<typeof formSchema>>({
+    resolver: valibotResolver(formSchema),
     defaultValues: {
       title: `[TEST] Test Proposal #${Math.round(Date.now() / 1000)}`,
       description:
@@ -70,7 +70,7 @@ function CreateProposalComponent() {
   const candidParser = useCandidParser(canisterId);
 
   const { mutate: propose, isPending: isSubmitting } = useMutation({
-    mutationFn: async (data: z.infer<typeof formSchema>) => {
+    mutationFn: async (data: v.Output<typeof formSchema>) => {
       Actor.agentOf(governor)?.replaceIdentity?.(identity!);
 
       const encodedArguments =
@@ -120,7 +120,7 @@ function CreateProposalComponent() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => propose(data);
+  const onSubmit = (data: v.Output<typeof formSchema>) => propose(data);
 
   return (
     <div className="container py-6 space-y-6">

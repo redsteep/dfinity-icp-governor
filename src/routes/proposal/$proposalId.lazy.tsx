@@ -5,9 +5,15 @@ import { useMemo } from "react";
 import { P, match } from "ts-pattern";
 import { Section } from "~/components/layout/section";
 import { Separator } from "~/components/ui/separator";
-import { ProposalPayload } from "~/declarations/governor/governor.did";
+import type {
+  Proposal,
+  ProposalPayload,
+  Vote,
+} from "~/declarations/governor/governor.did";
 import { useCandidParser } from "~/hooks/use-candid-parser";
 import {
+  List,
+  Optional,
   fromList,
   fromNullableTimestamp,
   fromOptional,
@@ -33,31 +39,9 @@ function ProposalComponent() {
     .with({ ok: P.select() }, (proposal) => proposal)
     .otherwise(() => null);
 
-  const { votesFor, votesAgainst } = useMemo(() => {
-    let votesFor = 0n;
-    let votesAgainst = 0n;
-
-    for (const vote of fromList(proposal?.votes ?? [])) {
-      match(vote.voteOption)
-        .with({ for: null }, () => (votesFor += vote.votingPower))
-        .with({ against: null }, () => (votesAgainst += vote.votingPower))
-        .exhaustive();
-    }
-
-    return {
-      votesFor,
-      votesAgainst,
-    };
-  }, [proposal]);
-
   if (!proposal) {
     return null;
   }
-
-  const createdAt = fromTimestamp(proposal.createdAt);
-  const executedAt = fromNullableTimestamp(proposal.executedAt);
-  const cancelledAt = fromNullableTimestamp(proposal.cancelledAt);
-  const description = fromOptional(proposal.content.description);
 
   return (
     <div className="container py-6 space-y-6">
@@ -86,73 +70,130 @@ function ProposalComponent() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Section className="md:col-span-2" title="Details">
-          <div className="p-4 font-semibold *:border-b *:py-3 first:*:pt-0 last:*:pb-0 last:*:border-b-0">
-            <DetailRow
-              leftValue="Status"
-              rightValue={match(proposal.status)
-                .with({ approved: null }, () => "Approved")
-                .with({ executed: null }, () => "Executed")
-                .with({ open: null }, () => "Open")
-                .with({ pending: null }, () => "Pending")
-                .with({ rejected: P._ }, () => "Rejected")
-                .with({ timelocked: P._ }, () => "Timelocked")
-                .exhaustive()}
-            />
-            <DetailRow
-              leftValue="Proposer"
-              rightValue={proposal.proposer.toText()}
-            />
-            <DetailRow
-              leftValue="Proposed on"
-              rightValue={dateFormat.format(createdAt)}
-            />
-            {cancelledAt && (
-              <DetailRow
-                leftValue="Cancelled on"
-                rightValue={dateFormat.format(cancelledAt)}
-              />
-            )}
-            {executedAt && (
-              <DetailRow
-                leftValue="Executed on"
-                rightValue={dateFormat.format(executedAt)}
-              />
-            )}
-          </div>
-        </Section>
-
-        <Section className="md:col-span-1" title="Votes">
-          <div className="p-4 space-y-3">
-            <div className="flex flex-row items-center justify-between text-base font-semibold">
-              <span className="flex flex-row items-center justify-between text-emerald-500">
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                For
-              </span>
-              <span>{numberFormat.format(votesFor)}</span>
-            </div>
-
-            <Separator />
-
-            <div className="flex flex-row items-center justify-between text-base font-semibold">
-              <span className="flex flex-row items-center justify-between text-red-500">
-                <XOctagon className="w-4 h-4 mr-2" />
-                Against
-              </span>
-              <span>{numberFormat.format(votesAgainst)}</span>
-            </div>
-          </div>
-        </Section>
-
-        {description && (
-          <Section className="md:col-span-3" title="Description">
-            <p className="p-4">{description}</p>
-          </Section>
-        )}
-
+        <DetailsSection proposal={proposal} />
+        <VotesSection votes={proposal.votes} />
+        <DescriptionSection description={proposal.content.description} />
         <ExecutablePayloadSection payload={proposal.payload} />
       </div>
     </div>
+  );
+}
+
+function DetailsSection({ proposal }: { proposal: Proposal }) {
+  const createdAt = fromTimestamp(proposal.createdAt);
+  const executedAt = fromNullableTimestamp(proposal.executedAt);
+  const cancelledAt = fromNullableTimestamp(proposal.cancelledAt);
+
+  return (
+    <Section className="md:col-span-2" title="Details">
+      <div className="p-4 font-semibold *:border-b *:py-3 first:*:pt-0 last:*:pb-0 last:*:border-b-0">
+        <DetailRow
+          leftValue="Status"
+          rightValue={match(proposal.status)
+            .with({ approved: null }, () => "Approved")
+            .with({ executed: null }, () => "Executed")
+            .with({ open: null }, () => "Open")
+            .with({ pending: null }, () => "Pending")
+            .with({ rejected: P._ }, () => "Rejected")
+            .with({ timelocked: P._ }, () => "Timelocked")
+            .exhaustive()}
+        />
+        <DetailRow
+          leftValue="Proposer"
+          rightValue={proposal.proposer.toText()}
+        />
+        <DetailRow
+          leftValue="Proposed on"
+          rightValue={dateFormat.format(createdAt)}
+        />
+        {cancelledAt && (
+          <DetailRow
+            leftValue="Cancelled on"
+            rightValue={dateFormat.format(cancelledAt)}
+          />
+        )}
+        {executedAt && (
+          <DetailRow
+            leftValue="Executed on"
+            rightValue={dateFormat.format(executedAt)}
+          />
+        )}
+      </div>
+    </Section>
+  );
+}
+
+function DetailRow({
+  leftValue,
+  rightValue,
+}: {
+  leftValue: string;
+  rightValue: string;
+}) {
+  return (
+    <div className="flex flex-row items-center justify-between">
+      <span className="text-muted-foreground">{leftValue}</span>
+      <span>{rightValue}</span>
+    </div>
+  );
+}
+
+function VotesSection({ votes }: { votes: List<Vote> }) {
+  const { votesFor, votesAgainst } = useMemo(() => {
+    let votesFor = 0n;
+    let votesAgainst = 0n;
+
+    for (const vote of fromList(votes)) {
+      match(vote.voteOption)
+        .with({ for: null }, () => (votesFor += vote.votingPower))
+        .with({ against: null }, () => (votesAgainst += vote.votingPower))
+        .exhaustive();
+    }
+
+    return {
+      votesFor,
+      votesAgainst,
+    };
+  }, [votes]);
+
+  return (
+    <Section className="md:col-span-1" title="Votes">
+      <div className="p-4 space-y-3">
+        <div className="flex flex-row items-center justify-between text-base font-semibold">
+          <span className="flex flex-row items-center justify-between text-emerald-500">
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            For
+          </span>
+          <span>{numberFormat.format(votesFor)}</span>
+        </div>
+
+        <Separator />
+
+        <div className="flex flex-row items-center justify-between text-base font-semibold">
+          <span className="flex flex-row items-center justify-between text-red-500">
+            <XOctagon className="w-4 h-4 mr-2" />
+            Against
+          </span>
+          <span>{numberFormat.format(votesAgainst)}</span>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function DescriptionSection({
+  description,
+}: {
+  description: Optional<string>;
+}) {
+  const unwrapped = fromOptional(description);
+  if (!unwrapped) {
+    return null;
+  }
+  return (
+    <Section className="md:col-span-3" title="Description">
+      <p className="p-4">{description}</p>
+    </Section>
   );
 }
 
@@ -197,20 +238,5 @@ function ExecutablePayloadSection({ payload }: { payload: ProposalPayload }) {
         </code>
       </pre>
     </Section>
-  );
-}
-
-function DetailRow({
-  leftValue,
-  rightValue,
-}: {
-  leftValue: string;
-  rightValue: string;
-}) {
-  return (
-    <div className="flex flex-row items-center justify-between">
-      <span className="text-muted-foreground">{leftValue}</span>
-      <span>{rightValue}</span>
-    </div>
   );
 }

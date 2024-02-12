@@ -1,11 +1,10 @@
 import { Actor } from "@dfinity/agent";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, PenLineIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { P, match } from "ts-pattern";
-import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -29,11 +28,10 @@ import { VoteOption } from "~/declarations/governor/governor.did";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
 import { numberFormat } from "~/lib/intl-format";
 import { getProposalByIdQueryOptions } from "~/services/governance";
+import * as v from "valibot";
 
-const formSchema = z.object({
-  option: z.enum(["for", "against"], {
-    required_error: "You need to select vote option.",
-  }),
+const formSchema = v.object({
+  option: v.picklist(["for", "against"], "You need to select vote option."),
 });
 
 export function ProposalVoteDialog({
@@ -91,11 +89,11 @@ export function ProposalVoteDialog({
     },
   });
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<v.Output<typeof formSchema>>({
+    resolver: valibotResolver(formSchema),
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = (data: v.Output<typeof formSchema>) => {
     castVote(data.option === "for" ? { for: null } : { against: null });
   };
 
