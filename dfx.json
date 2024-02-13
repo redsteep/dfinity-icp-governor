@@ -6,12 +6,7 @@
     },
     "counter": {
       "type": "motoko",
-      "main": "canisters/governance/tests/counter.mo",
-      "remote": {
-        "id": {
-          "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai"
-        }
-      }
+      "main": "canisters/governance/tests/counter.mo"
     },
     "website": {
       "type": "assets",

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
+NETWORK="${1:-local}"
 PRINCIPAL=$(dfx identity get-principal)
 
-dfx deploy icrc1_ledger --argument "(record {
+dfx deploy --network $NETWORK icrc1_ledger --argument "(record {
   token_name = \"Token example\";
   token_symbol = \"TEX\";
   decimals = 6;
@@ -21,14 +22,18 @@ dfx deploy icrc1_ledger --argument "(record {
   };
 })"
 
-# dfx canister call icrc1_ledger icrc1_transfer "(record {
-#   to = record { owner = principal \"cnb4y-tiopz-so74m-yji22-j7vbg-74vzl-xvftf-my5fu-jdecf-tr5vw-qae\"; };
+# dfx canister --ic call icrc1_ledger icrc1_transfer "(record {
+#   to = record { owner = principal \"wdcpj-ncozd-yp3yv-hnyvp-5zq5x-xtw6e-wvsbk-7aeh2-nsvsv-7qnvn-tqe\"; };
 #   amount = 5_000_000;
 # })"
 
-dfx deploy governor --argument "(record {
-  ledgerCanisterId = principal \"$(dfx canister id icrc1_ledger)\";
+dfx deploy --network $NETWORK governor --argument "(record {
+  ledgerCanisterId = principal \"$(dfx canister id --network $NETWORK icrc1_ledger)\";
   systemParams = record {
+    metadata = opt record {
+      name = \"Example DAO\";
+      description = \"This is a short description for Example DAO.\";
+    };
     votingDelayNs = 0;
     votingPeriodNs = 30_000_000_000;
     timelockDelayNs = 15_000_000_000;
@@ -38,7 +43,7 @@ dfx deploy governor --argument "(record {
   };
 })"
 
-dfx deploy counter
-dfx deploy website
+dfx deploy --network $NETWORK counter
+dfx deploy --network $NETWORK website
 
 dfx generate

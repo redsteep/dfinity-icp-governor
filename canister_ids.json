@@ -1,4 +1,11 @@
 {
-  "governance": {},
-  "icrc1-ledger": {}
+  "governor": {
+    "ic": "bvxhp-eiaaa-aaaak-afnoq-cai"
+  },
+  "icrc1_ledger": {
+    "ic": "bswb3-jqaaa-aaaak-afnoa-cai"
+  },
+  "website": {
+    "ic": "b4umt-saaaa-aaaak-afnpa-cai"
+  }
 }
