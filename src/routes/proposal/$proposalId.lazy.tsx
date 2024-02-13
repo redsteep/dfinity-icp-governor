@@ -20,6 +20,7 @@ import {
   fromTimestamp,
 } from "~/lib/candid-utils";
 import { dateFormat, numberFormat } from "~/lib/intl-format";
+import { ProposalCancelButton } from "~/routes/proposal/-components/proposal-cancel-button";
 import { ProposalExecuteButton } from "~/routes/proposal/-components/proposal-execute-button";
 import { ProposalStatusBadge } from "~/routes/proposal/-components/proposal-status-badge";
 import { ProposalVoteDialog } from "~/routes/proposal/-components/proposal-vote-dialog";
@@ -53,17 +54,25 @@ function ProposalComponent() {
           <ProposalStatusBadge proposalStatus={proposal.status} />
         </div>
 
-        {match(proposal.status)
-          .with({ open: null }, () => (
-            <ProposalVoteDialog
-              proposalId={proposal.id}
-              proposalCreatedAt={proposal.createdAt}
-            />
-          ))
-          .with({ approved: null }, { queued: P._ }, () => (
-            <ProposalExecuteButton proposalId={proposal.id} />
-          ))
-          .otherwise(() => null)}
+        <div className="flex flex-row items-center justify-end space-x-4">
+          {match(proposal.status)
+            .with({ open: null }, () => (
+              <>
+                <ProposalCancelButton proposalId={proposal.id} />
+                <ProposalVoteDialog
+                  proposalId={proposal.id}
+                  proposalCreatedAt={proposal.createdAt}
+                />
+              </>
+            ))
+            .with({ approved: null }, { queued: P._ }, () => (
+              <>
+                <ProposalCancelButton proposalId={proposal.id} />
+                <ProposalExecuteButton proposalId={proposal.id} />
+              </>
+            ))
+            .otherwise(() => null)}
+        </div>
       </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
