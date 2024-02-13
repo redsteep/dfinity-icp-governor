@@ -1,5 +1,6 @@
+import { Actor } from "@dfinity/agent";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Ban, Loader2, Play } from "lucide-react";
+import { Ban, Loader2 } from "lucide-react";
 import { P, match } from "ts-pattern";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
@@ -9,10 +10,13 @@ import { getProposalByIdQueryOptions } from "~/services/governance";
 
 export function ProposalCancelButton({ proposalId }: { proposalId: bigint }) {
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useInternetIdentity();
+  const { identity, isAuthenticated } = useInternetIdentity();
 
   const { mutate: executeProposal, isPending: isExecuting } = useMutation({
-    mutationFn: () => governor.cancel(proposalId),
+    mutationFn: () => {
+      Actor.agentOf(governor)?.replaceIdentity?.(identity!);
+      return governor.cancel(proposalId);
+    },
     onSuccess: () =>
       queryClient.refetchQueries(getProposalByIdQueryOptions(proposalId)),
     onSettled: (data, error) => {
