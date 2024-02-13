@@ -56,14 +56,6 @@ function CreateProposalComponent() {
 
   const form = useForm<v.Output<typeof formSchema>>({
     resolver: valibotResolver(formSchema),
-    defaultValues: {
-      title: `[TEST] Test Proposal #${Math.round(Date.now() / 1000)}`,
-      description:
-        "This is supposed be a long description for a proposal that describes something, blah-blah-blah",
-      canisterId: "bw4dl-smaaa-aaaaa-qaacq-cai",
-      methodName: "increment",
-      arguments: "(record {by = 3})",
-    },
   });
 
   const canisterId = form.watch("canisterId");
