@@ -27,7 +27,10 @@ import { governor } from "~/declarations/governor";
 import { VoteOption } from "~/declarations/governor/governor.did";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
 import { numberFormat } from "~/lib/intl-format";
-import { getProposalByIdQueryOptions } from "~/services/governance";
+import {
+  getPastVotesQueryOptions,
+  getProposalByIdQueryOptions,
+} from "~/services/governance";
 import * as v from "valibot";
 
 const formSchema = v.object({
@@ -41,20 +44,12 @@ export function ProposalVoteDialog({
   proposalId: bigint;
   proposalCreatedAt: bigint;
 }) {
-  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
 
   const { identity, isAuthenticated } = useInternetIdentity();
   const { toast } = useToast();
 
-  const [open, setOpen] = useState(false);
-
-  const { data: votingPower, isPending: isFetchingVotingPower } = useQuery({
-    queryKey: ["voting-power", identity, String(proposalId)],
-    queryFn: () =>
-      governor.getPastVotes(identity!.getPrincipal(), proposalCreatedAt),
-    enabled: isAuthenticated,
-    staleTime: Infinity,
-  });
+  const queryClient = useQueryClient();
 
   const { mutate: castVote, isPending: isSubmitting } = useMutation({
     mutationFn: async (voteOption: VoteOption) => {
@@ -88,6 +83,10 @@ export function ProposalVoteDialog({
       }
     },
   });
+
+  const { data: votingPower, isLoading: isFetchingVotingPower } = useQuery(
+    getPastVotesQueryOptions(identity?.getPrincipal(), proposalCreatedAt),
+  );
 
   const form = useForm<v.Output<typeof formSchema>>({
     resolver: valibotResolver(formSchema),

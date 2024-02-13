@@ -1,9 +1,10 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, Users, XOctagon } from "lucide-react";
 import { useMemo } from "react";
 import { P, match } from "ts-pattern";
 import { Section } from "~/components/layout/section";
+import { Card } from "~/components/ui/card";
 import type {
   Proposal,
   ProposalPayload,
@@ -22,10 +23,7 @@ import { dateFormat, numberFormat } from "~/lib/intl-format";
 import { ProposalExecuteButton } from "~/routes/proposal/-components/proposal-execute-button";
 import { ProposalStatusBadge } from "~/routes/proposal/-components/proposal-status-badge";
 import { ProposalVoteDialog } from "~/routes/proposal/-components/proposal-vote-dialog";
-import {
-  getGovernorSystemParamsQueryOptions,
-  getProposalByIdQueryOptions,
-} from "~/services/governance";
+import { getProposalByIdQueryOptions } from "~/services/governance";
 
 export const Route = createLazyFileRoute("/proposal/$proposalId")({
   component: ProposalComponent,
@@ -47,7 +45,7 @@ function ProposalComponent() {
 
   return (
     <div className="container py-6 space-y-6">
-      <div className="flex flex-row items-center justify-between space-x-6">
+      <Card className="flex flex-row items-center justify-between p-4 space-x-6">
         <div className="flex flex-row items-center space-x-4">
           <h1 className="text-2xl font-bold leading-tight tracking-normal">
             {proposal.content.title}
@@ -56,17 +54,17 @@ function ProposalComponent() {
         </div>
 
         {match(proposal.status)
-          .with({ approved: null }, { queued: P._ }, () => (
-            <ProposalExecuteButton proposalId={proposal.id} />
-          ))
           .with({ open: null }, () => (
             <ProposalVoteDialog
               proposalId={proposal.id}
               proposalCreatedAt={proposal.createdAt}
             />
           ))
+          .with({ approved: null }, { queued: P._ }, () => (
+            <ProposalExecuteButton proposalId={proposal.id} />
+          ))
           .otherwise(() => null)}
-      </div>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-3">
         <DetailsSection proposal={proposal} />
@@ -86,65 +84,54 @@ function DetailsSection({ proposal }: { proposal: Proposal }) {
   const executedAt = fromNullableTimestamp(proposal.executedAt);
   const cancelledAt = fromNullableTimestamp(proposal.cancelledAt);
 
-  const { data: systemParams } = useQuery(
-    getGovernorSystemParamsQueryOptions(),
-  );
+  const rows = [
+    {
+      name: "Status",
+      value: match(proposal.status)
+        .with({ approved: null }, () => "Approved")
+        .with({ executed: null }, () => "Executed")
+        .with({ open: null }, () => "Open")
+        .with({ pending: null }, () => "Pending")
+        .with({ rejected: P._ }, () => "Rejected")
+        .with({ queued: P._ }, () => "Queued")
+        .exhaustive(),
+    },
+    {
+      name: "Proposer",
+      value: proposal.proposer.toText(),
+    },
+    {
+      name: "Proposed on",
+      value: dateFormat.format(createdAt),
+    },
+    {
+      name: "Cancelled on",
+      value: dateFormat.format(cancelledAt),
+      hidden: !cancelledAt,
+    },
+    {
+      name: "Executed on",
+      value: dateFormat.format(executedAt),
+      hidden: !executedAt,
+    },
+  ]
+    .filter(({ hidden }) => !hidden)
+    .map(({ name, value }) => (
+      <div
+        key={name}
+        className="flex flex-row items-center justify-between border-b"
+      >
+        <span className="text-muted-foreground">{name}</span>
+        <span className="text-right">{value}</span>
+      </div>
+    ));
 
   return (
     <Section className="md:col-span-2" title="Details">
       <div className="px-4 *:py-3 text-base font-semibold last:*:border-b-0">
-        <DetailRow
-          leftValue="Status"
-          rightValue={match(proposal.status)
-            .with({ approved: null }, () => "Approved")
-            .with({ executed: null }, () => "Executed")
-            .with({ open: null }, () => "Open")
-            .with({ pending: null }, () => "Pending")
-            .with({ rejected: P._ }, () => "Rejected")
-            .with({ queued: P._ }, () => "Queued")
-            .exhaustive()}
-        />
-        <DetailRow
-          leftValue="Proposer"
-          rightValue={proposal.proposer.toText()}
-        />
-        <DetailRow
-          leftValue="Proposed on"
-          rightValue={dateFormat.format(createdAt)}
-        />
-        {/* <DetailRow
-          leftValue="Open unti"
-          rightValue={dateFormat.format(proposal. systemParams?.votingDelayNs)}
-        /> */}
-        {cancelledAt && (
-          <DetailRow
-            leftValue="Cancelled on"
-            rightValue={dateFormat.format(cancelledAt)}
-          />
-        )}
-        {executedAt && (
-          <DetailRow
-            leftValue="Executed on"
-            rightValue={dateFormat.format(executedAt)}
-          />
-        )}
+        {rows}
       </div>
     </Section>
-  );
-}
-
-function DetailRow({
-  leftValue,
-  rightValue,
-}: {
-  leftValue: string;
-  rightValue: string;
-}) {
-  return (
-    <div className="flex flex-row items-center justify-between border-b">
-      <span className="text-muted-foreground">{leftValue}</span>
-      <span className="text-right">{rightValue}</span>
-    </div>
   );
 }
 
@@ -236,6 +223,7 @@ function ExecutablePayloadSection({ payload }: { payload: ProposalPayload }) {
           : new Uint8Array(payload.data),
       );
     } catch (error) {
+      console.log(error);
       decodedIdlArgs = "Failed to decode.";
     }
   }

@@ -184,6 +184,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
       throw Error.reject("This function is only callable via proposal execution.");
     };
     systemParams := {
+      systemParams with
       votingDelayNs = Option.get(payload.votingDelayNs, systemParams.votingDelayNs);
       votingPeriodNs = Option.get(payload.votingPeriodNs, systemParams.votingPeriodNs);
       timelockDelayNs = Option.get(payload.timelockDelayNs, systemParams.timelockDelayNs);

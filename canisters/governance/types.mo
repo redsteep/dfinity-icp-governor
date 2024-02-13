@@ -19,6 +19,8 @@ module {
   };
 
   public type GovernorSystemParams = {
+    // Optional metadata for the Governor (name, description, icons, etc.).
+    metadata : ?GovernorMetadata;
     // The delay before voting on a proposal may take place, in nanoseconds.
     votingDelayNs : Nat;
     // The duration of voting on a proposal, in nanoseconds.
@@ -31,6 +33,11 @@ module {
     proposalThreshold : Nat;
     // The guardian can cancel proposals.
     guardian : ?Principal;
+  };
+
+  public type GovernorMetadata = {
+    name : Text;
+    description : Text;
   };
 
   public type UpdateGovernorSystemParamsPayload = {

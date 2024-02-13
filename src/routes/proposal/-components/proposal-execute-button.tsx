@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, PlayCircle } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 import { P, match } from "ts-pattern";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
@@ -47,7 +47,7 @@ export function ProposalExecuteButton({ proposalId }: { proposalId: bigint }) {
       {isExecuting ? (
         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
       ) : (
-        <PlayCircle className="w-4 h-4 mr-2" />
+        <Play className="w-4 h-4 mr-2" />
       )}
       Execute proposal
     </Button>

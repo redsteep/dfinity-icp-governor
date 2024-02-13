@@ -3,7 +3,7 @@ import { Principal } from "@dfinity/principal";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, useRouter } from "@tanstack/react-router";
-import { Loader2, ScrollIcon } from "lucide-react";
+import { Loader2, Rocket } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { P, match } from "ts-pattern";
 import * as v from "valibot";
@@ -124,8 +124,7 @@ function CreateProposalComponent() {
 
   return (
     <div className="container py-6 space-y-6">
-      <div className="flex flex-row items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-normal">New proposal</h1>
+      <div className="flex flex-row items-center justify-end">
         <Button
           onClick={form.handleSubmit(onSubmit)}
           disabled={!isAuthenticated || isSubmitting}
@@ -133,9 +132,9 @@ function CreateProposalComponent() {
           {isSubmitting ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           ) : (
-            <ScrollIcon className="w-4 h-4 mr-2" />
+            <Rocket className="w-4 h-4 mr-2" />
           )}
-          {isAuthenticated ? "Propose" : "Sign In to Propose"}
+          {isAuthenticated ? "Publish" : "Sign In to Publish"}
         </Button>
       </div>
 

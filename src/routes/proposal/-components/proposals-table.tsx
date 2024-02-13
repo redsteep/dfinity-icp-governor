@@ -113,7 +113,7 @@ function ProposalVotesTableCell({
   );
 
   return (
-    <div className="col-span-1 space-y-1">
+    <div className="col-span-1 space-y-1.5">
       {votingPower > 0n ? (
         <span className={cn("text-base font-semibold", className)}>
           {numberFormat.format(votingPower)}

@@ -34,8 +34,10 @@ export function fromTimestamp(value: bigint): Date {
   return new Date(Number(value) / (1000 * 1000));
 }
 
-export function toTimestamp(value: Date): bigint {
-  return BigInt(value.getTime() * 1000 * 1000);
+export function toTimestamp(value: Date | number): bigint {
+  return BigInt(
+    (value instanceof Date ? value.getTime() : value) * 1000 * 1000,
+  );
 }
 
 export function fromNullableTimestamp(value?: [] | [bigint]) {
