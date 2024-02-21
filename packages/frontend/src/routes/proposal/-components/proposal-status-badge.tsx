@@ -1,5 +1,5 @@
 import { P, match } from "ts-pattern";
-import type { ProposalStatus } from "~/declarations/governor/governor.did";
+import type { ProposalStatus } from "canisters/declarations/governor/governor.did";
 import { cn } from "~/lib/clsx-tw-merge";
 
 export function ProposalStatusBadge({

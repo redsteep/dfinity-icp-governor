@@ -5,8 +5,8 @@ import {
   generateRandomIdentity,
 } from "@hadronous/pic";
 import { fail } from "assert";
+import { Proposal, _SERVICE } from "declarations/governor/governor.did";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { Proposal, _SERVICE } from "~/declarations/governor/governor.did";
 import {
   INIT_SYSTEM_PARAMS,
   setupGovernorCanister,

@@ -5,19 +5,18 @@
     ".prettierignore",
     ".prettierrc",
     "dfx.json",
-    "tsconfig.json",
-    "vitest.workspace.ts"
+    "tsconfig.json"
   ],
   "pipeline": {
     "build": {
-      "outputs": ["dist/**", "packages/declarations/**", "build/**"],
+      "outputs": ["dist/**", "declarations/**"],
       "dependsOn": ["^build"]
     },
     "test": {
-      "dependsOn": []
+      "dependsOn": ["build"]
     },
     "deploy": {
-      "dependsOn": ["test"]
+      "dependsOn": ["build", "test"]
     },
     "dev": {
       "cache": false,

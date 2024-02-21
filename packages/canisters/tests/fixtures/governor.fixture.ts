@@ -1,13 +1,13 @@
 import { IDL } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 import { PocketIc } from "@hadronous/pic";
-import { resolve } from "node:path";
 import {
   idlFactory,
   init,
   type GovernorSystemParams,
   type _SERVICE,
-} from "~/declarations/governor/governor.did.js";
+} from "declarations/governor/governor.did.js";
+import { resolve } from "node:path";
 
 const WASM_PATH = resolve(
   __dirname,

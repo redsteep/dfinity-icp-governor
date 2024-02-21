@@ -3,6 +3,7 @@ import { Principal } from "@dfinity/principal";
 import { valibotResolver } from "@hookform/resolvers/valibot";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, useRouter } from "@tanstack/react-router";
+import { governor } from "canisters/declarations/governor";
 import { Loader2, Rocket } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { P, match } from "ts-pattern";
@@ -21,7 +22,6 @@ import {
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { useToast } from "~/components/ui/use-toast";
-import { governor } from "~/declarations/governor";
 import { useCandidParser } from "~/hooks/use-candid-parser";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
 import { toOptional } from "~/lib/candid-utils";

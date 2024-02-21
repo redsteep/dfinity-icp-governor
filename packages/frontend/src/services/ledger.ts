@@ -1,5 +1,5 @@
 // import { queryOptions } from "@tanstack/react-query";
-// import { governance } from "~/declarations/governance";
+// import { governance } from "canisters/declarations/governance";
 
 // export const getProposalsQueryOptions = () =>
 //   queryOptions({

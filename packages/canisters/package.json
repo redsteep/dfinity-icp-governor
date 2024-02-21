@@ -2,14 +2,20 @@
   "name": "canisters",
   "private": true,
   "type": "module",
+  "files": [
+    "declarations/**"
+  ],
   "scripts": {
     "dev": "vitest watch",
     "test": "vitest run",
+    "build": "dfx generate governor && dfx generate icrc1_ledger",
     "deploy": "sh deploy-canisters.sh"
+  },
+  "dependencies": {
+    "@dfinity/agent": "^0.21.4"
   },
   "devDependencies": {
     "@hadronous/pic": "^0.4.0",
-    "@dfinity/agent": "^0.21.4",
     "@dfinity/candid": "^0.21.4",
     "@dfinity/identity": "^0.21.4",
     "@dfinity/principal": "^0.21.4",

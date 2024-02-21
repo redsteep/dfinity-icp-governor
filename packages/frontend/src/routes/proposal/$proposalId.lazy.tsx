@@ -9,7 +9,7 @@ import type {
   Proposal,
   ProposalPayload,
   Vote,
-} from "~/declarations/governor/governor.did";
+} from "canisters/declarations/governor/governor.did";
 import { useCandidParser } from "~/hooks/use-candid-parser";
 import {
   type List,

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { match } from "ts-pattern";
 import { Progress } from "~/components/ui/progress";
-import type { Proposal } from "~/declarations/governor/governor.did";
+import type { Proposal } from "canisters/declarations/governor/governor.did";
 import { fromList, fromTimestamp } from "~/lib/candid-utils";
 import { cn } from "~/lib/clsx-tw-merge";
 import { dateFormat, numberFormat } from "~/lib/intl-format";

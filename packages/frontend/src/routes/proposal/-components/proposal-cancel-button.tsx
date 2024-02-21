@@ -4,7 +4,7 @@ import { Ban, Loader2 } from "lucide-react";
 import { P, match } from "ts-pattern";
 import { Button } from "~/components/ui/button";
 import { toast } from "~/components/ui/use-toast";
-import { governor } from "~/declarations/governor";
+import { governor } from "canisters/declarations/governor";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
 import { getProposalByIdQueryOptions } from "~/services/governance";
 

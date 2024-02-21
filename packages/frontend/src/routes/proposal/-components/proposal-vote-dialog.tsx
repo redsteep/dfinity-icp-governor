@@ -23,8 +23,8 @@ import {
 } from "~/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { useToast } from "~/components/ui/use-toast";
-import { governor } from "~/declarations/governor";
-import type { VoteOption } from "~/declarations/governor/governor.did";
+import { governor } from "canisters/declarations/governor";
+import type { VoteOption } from "canisters/declarations/governor/governor.did";
 import { useInternetIdentity } from "~/hooks/use-internet-identity";
 import { numberFormat } from "~/lib/intl-format";
 import {

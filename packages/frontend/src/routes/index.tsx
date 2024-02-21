@@ -1,5 +1,6 @@
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import type { GovernorSystemParams } from "canisters/declarations/governor/governor.did";
 import { ChevronDown, ChevronUp, Loader2, PlusIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { P, match } from "ts-pattern";
@@ -12,7 +13,6 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import { Separator } from "~/components/ui/separator";
-import type { GovernorSystemParams } from "~/declarations/governor/governor.did";
 import { fromOptional } from "~/lib/candid-utils";
 import { numberFormat } from "~/lib/intl-format";
 import { ProposalsTable } from "~/routes/proposal/-components/proposals-table";

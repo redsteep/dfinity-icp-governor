@@ -1,15 +1,10 @@
-import { Identity } from "@dfinity/agent";
 import { IDL } from "@dfinity/candid";
-import { Principal } from "@dfinity/principal";
 import { CanisterFixture } from "@hadronous/pic";
-import { expect } from "vitest";
 import type {
-  Proposal,
   ProposalContent,
-  ProposalPayload,
   UpdateGovernorSystemParamsPayload,
   _SERVICE,
-} from "~/declarations/governor/governor.did.js";
+} from "declarations/governor/governor.did.js";
 
 const UpdateGovernorSystemParamsPayload = IDL.Record({
   timelockDelayNs: IDL.Opt(IDL.Nat),

@@ -4,8 +4,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"],
-      "~/declarations/*": ["../declarations/*"]
+      "~/*": ["./src/*"]
     },
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "target": "ESNext",
@@ -18,6 +17,6 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "node"],
+    "types": ["vite/client", "node"]
   }
 }

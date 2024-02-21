@@ -44,5 +44,3 @@ dfx deploy --network $NETWORK governor --argument "(record {
 })"
 
 dfx deploy --network $NETWORK frontend
-
-dfx generate

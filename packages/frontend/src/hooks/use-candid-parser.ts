@@ -1,7 +1,7 @@
 import { Actor, fetchCandid, type HttpAgent } from "@dfinity/agent";
 import { useQuery } from "@tanstack/react-query";
 import { parseCandid } from "candid-parser-wasm";
-import { governor } from "~/declarations/governor";
+import { governor } from "canisters/declarations/governor";
 import { createDisposableRef } from "~/lib/dispose-on-query-cache-eviction";
 
 export function useCandidParser(canisterId?: string) {

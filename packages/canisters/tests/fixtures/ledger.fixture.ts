@@ -1,12 +1,12 @@
 import { IDL } from "@dfinity/candid";
 import { Principal } from "@dfinity/principal";
 import { PocketIc } from "@hadronous/pic";
-import { resolve } from "node:path";
 import {
   idlFactory,
   init,
   type _SERVICE,
-} from "~/declarations/icrc1_ledger/icrc1_ledger.did.js";
+} from "declarations/icrc1_ledger/icrc1_ledger.did.js";
+import { resolve } from "node:path";
 
 const WASM_PATH = resolve(
   __dirname,

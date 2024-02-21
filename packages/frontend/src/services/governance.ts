@@ -1,6 +1,6 @@
 import type { Principal } from "@dfinity/principal";
 import { queryOptions } from "@tanstack/react-query";
-import { governor } from "~/declarations/governor";
+import { governor } from "canisters/declarations/governor";
 
 export const getSystemParamsQueryOptions = () =>
   queryOptions({
