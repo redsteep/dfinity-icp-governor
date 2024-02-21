@@ -1,1 +1,2 @@
-/src/declarations
+/packages/declarations
+/packages/frontend/routeTree.gen.ts

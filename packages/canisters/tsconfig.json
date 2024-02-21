@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["tests/"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/declarations/*": ["../declarations/*"]
+    },
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "target": "ESNext",
+    "noEmit": true,
+  }
+}

@@ -1,0 +1,3 @@
+packages:
+  - packages/canisters
+  - packages/frontend

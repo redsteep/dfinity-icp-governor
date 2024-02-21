@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src/"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"],
+      "~/declarations/*": ["../declarations/*"]
+    },
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "useDefineForClassFields": true,
+    "esModuleInterop": false,
+    "moduleResolution": "Node",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "types": ["vite/client", "node"],
+  }
+}

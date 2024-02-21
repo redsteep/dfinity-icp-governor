@@ -1,17 +1,24 @@
 {
+  "dfx": "0.17.0",
+  "output_env_file": ".env",
+  "version": 1,
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  },
   "canisters": {
     "governor": {
       "type": "motoko",
-      "main": "canisters/governance/governor.mo"
+      "main": "packages/canisters/src/governor.mo",
+      "optimize": "cycles",
+      "gzip": true
     },
-    "counter": {
-      "type": "motoko",
-      "main": "canisters/governance/tests/counter.mo"
-    },
-    "website": {
+    "frontend": {
       "type": "assets",
       "dependencies": ["governor", "internet_identity"],
-      "source": ["dist/"],
+      "build": ["pnpm turbo build --filter frontend"],
+      "source": ["packages/frontend/dist/"],
       "frontend": {}
     },
     "internet_identity": {
@@ -27,13 +34,7 @@
     },
     "icrc1_ledger": {
       "type": "motoko",
-      "main": "canisters/ledger/icrc1-ledger.mo"
+      "main": "packages/canisters/src/ledger/icrc1-ledger.mo"
     }
-  },
-  "defaults": {
-    "build": {
-      "packtool": "mops sources"
-    }
-  },
-  "output_env_file": ".env"
+  }
 }
