@@ -198,7 +198,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
     switch (getProposalById(proposalId)) {
-      case (null) #err("Proposal with ID " # Nat.toText(proposalId) # " doesn't exist.");
+      case (null) #err("Proposal with ID \"" # Nat.toText(proposalId) # "\" doesn't exist.");
       case (?proposal) #ok(proposal);
     };
   };

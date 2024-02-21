@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "vitest watch",
     "test": "vitest run",
-    "build": "dfx generate governor && dfx generate icrc1_ledger",
+    "build": "pnpm run /^generate:/",
+    "generate:governor": "dfx generate governor",
+    "generate:ledger": "dfx generate icrc1_ledger",
     "deploy": "sh deploy-canisters.sh"
   },
   "dependencies": {

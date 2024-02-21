@@ -5,7 +5,11 @@ import {
   generateRandomIdentity,
 } from "@hadronous/pic";
 import { fail } from "assert";
-import { Proposal, _SERVICE } from "declarations/governor/governor.did";
+import {
+  Proposal,
+  type _SERVICE as Governor,
+} from "declarations/governor/governor.did";
+import type { _SERVICE as Ledger } from "declarations/icrc1_ledger/icrc1_ledger.did";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   INIT_SYSTEM_PARAMS,
@@ -23,8 +27,8 @@ const bob = generateRandomIdentity();
 
 describe("Governor", async () => {
   let pic: PocketIc;
-  let ledger: CanisterFixture<unknown>;
-  let governor: CanisterFixture<_SERVICE>;
+  let ledger: CanisterFixture<Ledger>;
+  let governor: CanisterFixture<Governor>;
 
   beforeAll(async () => {
     pic = await PocketIc.create();
@@ -277,6 +281,116 @@ describe("Governor", async () => {
     it("should update system params after execution", async () => {
       expect(await governor.actor.getSystemParams()).not.toMatchObject(
         INIT_SYSTEM_PARAMS,
+      );
+    });
+  });
+
+  describe("#getProposal()", () => {
+    let testProposal: Proposal;
+
+    beforeAll(async () => {
+      governor.actor.setIdentity(alice);
+
+      const result = await createTestProposal(governor);
+      testProposal = "ok" in result ? result.ok : fail();
+    });
+
+    it("should return an error for a non-existent proposal", async () => {
+      expect(await governor.actor.getProposal(69n)).toMatchObject({
+        err: `Proposal with ID \"69\" doesn't exist.`,
+      });
+    });
+
+    it("should return data for an existing proposal", async () => {
+      expect(await governor.actor.getProposal(testProposal.id)).toMatchObject({
+        ok: testProposal,
+      });
+    });
+  });
+
+  describe("#getProposals()", () => {
+    it("should return a non-empty array of proposals", async () => {
+      const proposals = await governor.actor.getProposals();
+      expect(proposals).toBeInstanceOf(Array);
+      expect(proposals).not.toHaveLength(0);
+    });
+  });
+
+  describe("#getPastTotalSupply()", () => {
+    it("should not change for a fixed timepoint after increasing current total supply", async () => {
+      governor.actor.setIdentity(alice);
+      ledger.actor.setIdentity(alice);
+
+      const time = await pic.getTime();
+      const timeInNs = BigInt(time * 1000 * 1000);
+
+      const pastTotalSupply = await governor.actor.getPastTotalSupply(timeInNs);
+      expect(pastTotalSupply).toEqual(await ledger.actor.icrc1_total_supply());
+
+      await pic.advanceTime(100);
+      await pic.tick();
+
+      // Increase total supply by minting tokens to Bob
+      await ledger.actor.icrc1_transfer({
+        to: {
+          owner: bob.getPrincipal(),
+          subaccount: [],
+        },
+        amount: 10_000_000n,
+        from_subaccount: [],
+        created_at_time: [],
+        memo: [],
+        fee: [],
+      });
+
+      const newPastTotalSupply =
+        await governor.actor.getPastTotalSupply(timeInNs);
+
+      expect(newPastTotalSupply).toEqual(pastTotalSupply);
+      expect(newPastTotalSupply).toBeLessThan(
+        await ledger.actor.icrc1_total_supply(),
+      );
+    });
+  });
+
+  describe("#getPastVotes()", () => {
+    it("should not change for a fixed timepoint after transfering tokens", async () => {
+      governor.actor.setIdentity(bob);
+      ledger.actor.setIdentity(bob);
+
+      const time = await pic.getTime();
+      const timeInNs = BigInt(time * 1000 * 1000);
+
+      const pastVotes = await governor.actor.getPastVotes(
+        bob.getPrincipal(),
+        timeInNs,
+      );
+
+      const balance = await ledger.actor.icrc1_balance_of({
+        owner: bob.getPrincipal(),
+        subaccount: [],
+      });
+
+      expect(pastVotes).toEqual(balance);
+
+      await pic.advanceTime(100);
+      await pic.tick();
+
+      // Burn all tokens
+      await ledger.actor.icrc1_transfer({
+        to: {
+          owner: alice.getPrincipal(),
+          subaccount: [],
+        },
+        amount: balance,
+        from_subaccount: [],
+        created_at_time: [],
+        memo: [],
+        fee: [],
+      });
+
+      expect(pastVotes).toEqual(
+        await governor.actor.getPastVotes(bob.getPrincipal(), timeInNs),
       );
     });
   });
