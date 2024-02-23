@@ -185,12 +185,13 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
     systemParams := {
       systemParams with
+      metadata = Option.get(?payload.metadata, systemParams.metadata);
       votingDelayNs = Option.get(payload.votingDelayNs, systemParams.votingDelayNs);
       votingPeriodNs = Option.get(payload.votingPeriodNs, systemParams.votingPeriodNs);
       timelockDelayNs = Option.get(payload.timelockDelayNs, systemParams.timelockDelayNs);
       quorumThreshold = Option.get(payload.quorumThreshold, systemParams.quorumThreshold);
       proposalThreshold = Option.get(payload.proposalThreshold, systemParams.proposalThreshold);
-      guardian = payload.guardian;
+      guardian = Option.get(?payload.guardian, systemParams.guardian);
     };
   };
 
