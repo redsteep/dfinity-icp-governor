@@ -93,9 +93,57 @@ module {
     status : ProposalStatus;
     createdAt : Time.Time;
     cancelledAt : ?Time.Time;
-    timelockedAt : ?Time.Time;
+    executingAt : ?Time.Time;
     executedAt : ?Time.Time;
     votes : List.List<Vote>;
     quorumThreshold : Nat;
+  };
+
+  public func deriveProposalStatus(
+    systemParams : GovernorSystemParams,
+    proposal : Proposal,
+  ) : ProposalStatus {
+    if (proposal.executedAt != null) {
+      return #executed;
+    };
+    if (proposal.cancelledAt != null) {
+      return #rejected(#cancelled);
+    };
+
+    let votingStartsAt = proposal.createdAt + systemParams.votingDelayNs;
+    if (Time.now() < votingStartsAt) {
+      return #pending;
+    };
+    if (Time.now() < votingStartsAt + systemParams.votingPeriodNs) {
+      return #open;
+    };
+
+    switch (proposal.executingAt) {
+      case (?executingAt) return #queued(executingAt);
+      case (null) {};
+    };
+
+    var votingPowerFor = 0;
+    var votingPowerAgainst = 0;
+
+    List.iterate<Vote>(
+      proposal.votes,
+      func({ voteOption; votingPower }) {
+        switch (voteOption) {
+          case (#for_) votingPowerFor += votingPower;
+          case (#against) votingPowerAgainst += votingPower;
+        };
+      },
+    );
+
+    if (proposal.quorumThreshold > votingPowerFor + votingPowerAgainst) {
+      return #rejected(#quorumNotMet);
+    };
+
+    return if (votingPowerFor < votingPowerAgainst) {
+      #rejected(#rejectedByMajority);
+    } else {
+      #approved;
+    };
   };
 };

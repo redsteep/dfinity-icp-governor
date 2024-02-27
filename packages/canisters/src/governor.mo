@@ -11,6 +11,7 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import Trie "mo:base/Trie";
+import Array "mo:base/Array";
 
 import Types "types";
 
@@ -20,6 +21,27 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
   stable var systemParams : Types.GovernorSystemParams = init.systemParams;
 
   stable var proposals : Trie.Trie<Nat, Types.Proposal> = Trie.empty();
+
+  system func heartbeat() : async () {
+    let proposals = await getProposals();
+    let pendingProposals = Array.filter(
+      proposals,
+      func(proposal : Types.Proposal) : Bool = switch (proposal.status) {
+        case (#queued executingAt) Time.now() < executingAt;
+        case (_) false;
+      },
+    );
+
+    // Next heartbeat might come before these proposals are executed;
+    // Set executedAt now so that these proposals won't get picked up by the next heartbeat
+    for (proposal in pendingProposals.vals()) {
+      ignore storeProposal(proposal.id, { proposal with executedAt = ?Time.now() });
+    };
+
+    for (proposal in pendingProposals.vals()) {
+      ignore await executeProposal(proposal);
+    };
+  };
 
   public shared ({ caller }) func propose(
     content : Types.ProposalContent,
@@ -52,7 +74,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
         status = #open;
         createdAt = createdAt;
         cancelledAt = null;
-        timelockedAt = null;
+        executingAt = null;
         executedAt = null;
         votes = List.nil();
         quorumThreshold;
@@ -105,36 +127,30 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
       case (null) #err("Proposal with ID \"" # Nat.toText(proposalId) # "\" doesn't exist.");
       case (?proposal) {
         switch (proposal.status) {
-          case (#queued _) {
-            #err("Proposal hasn't surpassed time lock.");
-          };
+          case (#queued _) #err("Proposal hasn't surpassed time lock.");
+          case (#executed) #err("Proposal has been already executed.");
 
           case (#approved) {
-            if (systemParams.timelockDelayNs > 0 and proposal.timelockedAt == null) {
-              ignore storeProposal(
+            if (systemParams.timelockDelayNs > 0 and proposal.executingAt == null) {
+              return storeProposal(
                 proposalId,
                 {
                   proposal with
-                  timelockedAt = ?Time.now()
+                  executingAt = ?(Time.now() + systemParams.timelockDelayNs)
                 },
               );
-
-              return #err(
-                "Proposal execution has been time-locked for " # Int.toText(systemParams.timelockDelayNs / 1000_000_000) # " seconds."
-              );
             };
 
-            try {
-              let payload = proposal.payload;
-              ignore await IC.call(payload.canisterId, payload.method, payload.data);
-            } catch (error) {
-              return #err(Error.message(error));
-            };
-
-            storeProposal(
+            let executedProposal = storeProposal(
               proposalId,
               { proposal with executedAt = ?Time.now() },
             );
+
+            switch (await executeProposal(proposal)) {
+              case (#ok _) executedProposal;
+              case (#err message) #err(message);
+            };
+
           };
 
           case (_) {
@@ -209,7 +225,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
       proposals,
       func(_, proposal) = {
         proposal with
-        status = deriveProposalStatus(proposal)
+        status = Types.deriveProposalStatus(systemParams, proposal)
       },
     );
   };
@@ -234,7 +250,8 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     switch (Trie.get(proposals, getProposalKey(proposalId), Nat.equal)) {
       case (null) null;
       case (?proposal) ?{
-        proposal with status = deriveProposalStatus(proposal)
+        proposal with
+        status = Types.deriveProposalStatus(systemParams, proposal)
       };
     };
   };
@@ -244,55 +261,19 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     proposal : Types.Proposal,
   ) : Result.Result<Types.Proposal, Text> {
     proposals := Trie.put(proposals, getProposalKey(proposalId), Nat.equal, proposal).0;
-    #ok({ proposal with status = deriveProposalStatus(proposal) });
+    #ok({
+      proposal with
+      status = Types.deriveProposalStatus(systemParams, proposal)
+    });
   };
 
-  private func deriveProposalStatus(proposal : Types.Proposal) : Types.ProposalStatus {
-    if (proposal.executedAt != null) {
-      return #executed;
-    };
-    if (proposal.cancelledAt != null) {
-      return #rejected(#cancelled);
-    };
-
-    let votingStartsAt = proposal.createdAt + systemParams.votingDelayNs;
-    if (Time.now() < votingStartsAt) {
-      return #pending;
-    };
-    if (Time.now() < votingStartsAt + systemParams.votingPeriodNs) {
-      return #open;
-    };
-
-    switch (proposal.timelockedAt) {
-      case (null) {};
-      case (?timelockedAt) if (Time.now() < timelockedAt + systemParams.timelockDelayNs) {
-        return #queued(timelockedAt);
-      } else {
-        return #approved;
-      };
-    };
-
-    var votingPowerFor = 0;
-    var votingPowerAgainst = 0;
-
-    List.iterate<Types.Vote>(
-      proposal.votes,
-      func({ voteOption; votingPower }) {
-        switch (voteOption) {
-          case (#for_) votingPowerFor += votingPower;
-          case (#against) votingPowerAgainst += votingPower;
-        };
-      },
-    );
-
-    if (proposal.quorumThreshold > votingPowerFor + votingPowerAgainst) {
-      return #rejected(#quorumNotMet);
-    };
-
-    return if (votingPowerFor < votingPowerAgainst) {
-      #rejected(#rejectedByMajority);
-    } else {
-      #approved;
+  private func executeProposal(proposal : Types.Proposal) : async Result.Result<(), Text> {
+    try {
+      let payload = proposal.payload;
+      ignore await IC.call(payload.canisterId, payload.method, payload.data);
+      #ok;
+    } catch (error) {
+      #err(Error.message(error));
     };
   };
 };

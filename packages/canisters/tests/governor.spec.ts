@@ -37,6 +37,7 @@ describe("Governor", async () => {
   });
 
   beforeEach(() => {
+    ledger.actor.setIdentity(anonymous);
     governor.actor.setIdentity(anonymous);
   });
 
@@ -255,7 +256,11 @@ describe("Governor", async () => {
       await pic.tick();
 
       expect(await governor.actor.execute(testProposal.id)).toMatchObject({
-        err: "Proposal execution has been time-locked for 15 seconds.",
+        ok: {
+          status: {
+            queued: expect.any(BigInt),
+          },
+        },
       });
     });
 
@@ -265,16 +270,12 @@ describe("Governor", async () => {
       });
     });
 
-    it("should execute an approved proposal after timelock", async () => {
+    it("should automatically execute an approved proposal after timelock", async () => {
       await pic.advanceTime(30_000);
       await pic.tick();
 
       expect(await governor.actor.execute(testProposal.id)).toMatchObject({
-        ok: {
-          status: {
-            executed: null,
-          },
-        },
+        err: "Proposal has been already executed.",
       });
     });
 
