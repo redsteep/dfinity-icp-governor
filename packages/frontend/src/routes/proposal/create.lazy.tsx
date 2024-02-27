@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createLazyFileRoute, useRouter } from "@tanstack/react-router";
 import { governor } from "canisters/declarations/governor";
 import { Loader2, Rocket } from "lucide-react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { P, match } from "ts-pattern";
 import * as v from "valibot";
@@ -20,6 +21,13 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import { useToast } from "~/components/ui/use-toast";
 import { useCandidParser } from "~/hooks/use-candid-parser";
@@ -60,6 +68,11 @@ function CreateProposalComponent() {
 
   const canisterId = form.watch("canisterId");
   const candidParser = useCandidParser(canisterId);
+  const methodNames = Object.keys(candidParser?.getFunctions() ?? {});
+
+  useEffect(() => {
+    form.resetField("methodName");
+  }, [canisterId]);
 
   const { mutate: propose, isPending: isSubmitting } = useMutation({
     mutationFn: async (data: v.Output<typeof formSchema>) => {
@@ -179,7 +192,7 @@ function CreateProposalComponent() {
                     <FormControl>
                       <Input
                         className="font-mono"
-                        placeholder="abcd-abcd-abcd-abcd"
+                        placeholder="aaaaa-aaaaa-aaaaa-aaaaa-aaa"
                         {...field}
                       />
                     </FormControl>
@@ -189,18 +202,30 @@ function CreateProposalComponent() {
               />
 
               <FormField
+                key={canisterId}
                 control={form.control}
                 name="methodName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Method name</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="font-mono"
-                        placeholder="abcd-abcd-abcd-abcd"
-                        {...field}
-                      />
-                    </FormControl>
+                    <FormLabel>Method</FormLabel>
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={field.onChange}
+                      disabled={methodNames.length <= 0}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {methodNames.map((name, index) => (
+                          <SelectItem key={index} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -215,7 +240,7 @@ function CreateProposalComponent() {
                     <FormControl>
                       <Input
                         className="font-mono"
-                        placeholder="abcd-abcd-abcd-abcd"
+                        placeholder="()"
                         {...field}
                       />
                     </FormControl>
