@@ -1,5 +1,7 @@
 # ICP Governance Canister
 
+Governor is a canister and a frontend for a single DAO management Dapp
+
 ## Prerequisites
 
 This project requires an installation of:
