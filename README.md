@@ -2,6 +2,13 @@
 
 Governor is a canister and a frontend for a single DAO management Dapp
 
+## Overview
+
+* Principals can create a proposal when having enough tokens above the DAO-wide threshold
+* Principals can cast a vote on a proposal when having any tokens, there's no voting threshold
+* Voting weight for each principal equals to it's token balance
+* Principals can schedule an execute of a proposal that reaches a quorum for a DAO
+
 ## Prerequisites
 
 This project requires an installation of:
