@@ -65,7 +65,7 @@ function ProposalComponent() {
                 />
               </>
             ))
-            .with({ approved: null }, { queued: P._ }, () => (
+            .with({ approved: null }, () => (
               <>
                 <ProposalCancelButton proposalId={proposal.id} />
                 <ProposalExecuteButton proposalId={proposal.id} />
