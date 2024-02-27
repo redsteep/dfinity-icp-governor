@@ -251,7 +251,7 @@ describe("Governor", async () => {
       });
     });
 
-    it("should timelock an approved proposal during execution", async () => {
+    it("should timelock/queue an approved proposal", async () => {
       await pic.advanceTime(60_000);
       await pic.tick();
 
@@ -264,13 +264,13 @@ describe("Governor", async () => {
       });
     });
 
-    it("should not execute a timelocked proposal", async () => {
+    it("should not execute a queued proposal", async () => {
       expect(await governor.actor.execute(testProposal.id)).toMatchObject({
         err: "Proposal hasn't surpassed time lock.",
       });
     });
 
-    it("should automatically execute an approved proposal after timelock", async () => {
+    it("should automatically execute queued proposal", async () => {
       await pic.advanceTime(30_000);
       await pic.tick();
 
@@ -279,7 +279,7 @@ describe("Governor", async () => {
       });
     });
 
-    it("should update system params after execution", async () => {
+    it("should update system params after proposal execution", async () => {
       expect(await governor.actor.getSystemParams()).not.toMatchObject(
         INIT_SYSTEM_PARAMS,
       );

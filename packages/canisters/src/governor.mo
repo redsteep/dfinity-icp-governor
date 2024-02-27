@@ -27,7 +27,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     let pendingProposals = Array.filter(
       proposals,
       func(proposal : Types.Proposal) : Bool = switch (proposal.status) {
-        case (#queued executingAt) Time.now() < executingAt;
+        case (#queued executingAt) Time.now() >= executingAt;
         case (_) false;
       },
     );
