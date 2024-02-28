@@ -199,15 +199,22 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     if (caller != Principal.fromActor(Self)) {
       throw Error.reject("This function is only callable via proposal execution.");
     };
+
+    switch (payload.guardian) {
+      case (null) {};
+      case (?newGuardian) systemParams := {
+        systemParams with guardian = ?newGuardian
+      };
+    };
+
     systemParams := {
       systemParams with
-      metadata = Option.get(?payload.metadata, systemParams.metadata);
+      metadata = Option.get(payload.metadata, systemParams.metadata);
       votingDelayNs = Option.get(payload.votingDelayNs, systemParams.votingDelayNs);
       votingPeriodNs = Option.get(payload.votingPeriodNs, systemParams.votingPeriodNs);
       timelockDelayNs = Option.get(payload.timelockDelayNs, systemParams.timelockDelayNs);
       quorumThreshold = Option.get(payload.quorumThreshold, systemParams.quorumThreshold);
       proposalThreshold = Option.get(payload.proposalThreshold, systemParams.proposalThreshold);
-      guardian = Option.get(?payload.guardian, systemParams.guardian);
     };
   };
 
