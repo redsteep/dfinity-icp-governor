@@ -1,11 +1,14 @@
 {
+  "docs": {
+    "ic": "7xvev-nyaaa-aaaak-afpdq-cai"
+  },
+  "frontend": {
+    "ic": "b4umt-saaaa-aaaak-afnpa-cai"
+  },
   "governor": {
     "ic": "bvxhp-eiaaa-aaaak-afnoq-cai"
   },
   "icrc1_ledger": {
     "ic": "bswb3-jqaaa-aaaak-afnoa-cai"
-  },
-  "frontend": {
-    "ic": "b4umt-saaaa-aaaak-afnpa-cai"
   }
 }

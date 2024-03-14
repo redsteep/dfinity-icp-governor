@@ -43,6 +43,8 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
   };
 
+  /// Allows a principal to propose a new governance proposal.
+  /// Principal should own a certain percentage (`proposalThreshold`) of vote tokens to be eligible to propose.
   public shared ({ caller }) func propose(
     content : Types.ProposalContent,
     payload : Types.ProposalPayload,
@@ -82,6 +84,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     );
   };
 
+  /// Allows a principal to cast their vote on a specific governance proposal.
   public shared ({ caller }) func castVote(
     proposalId : Nat,
     voteOption : Types.VoteOption,
@@ -120,6 +123,9 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
   };
 
+  /// Executes an approved proposal.
+  /// If governor doesn't have any timelock delay, then the proposal will be executed immediately.
+  /// Otherwise, it will be put into the queue and executed automatically on the next system heartbeat after timelock ends.
   public shared ({ caller }) func execute(
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
@@ -161,6 +167,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
   };
 
+  /// Allows for cancellation of an open or queued governance proposal by its proposer or governor guardian.
   public shared ({ caller }) func cancel(
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
@@ -189,10 +196,12 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
   };
 
+  /// Retrieves the current system parameters of the Governor.
   public query func getSystemParams() : async Types.GovernorSystemParams {
     systemParams;
   };
 
+  /// Updates the system parameters of the Governor.
   public shared ({ caller }) func updateSystemParams(
     payload : Types.UpdateGovernorSystemParamsPayload
   ) : async () {
@@ -218,6 +227,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
   };
 
+  /// Retrieves a specific governance proposal by its ID.
   public query func getProposal(
     proposalId : Nat
   ) : async Result.Result<Types.Proposal, Text> {
@@ -227,6 +237,7 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     };
   };
 
+  /// Retrieves all existing governance proposals with their derived status based on system parameters.
   public query func getProposals() : async [Types.Proposal] {
     Trie.toArray<Nat, Types.Proposal, Types.Proposal>(
       proposals,
@@ -237,10 +248,12 @@ actor class Governor(init : Types.GovernorInitArgs) = Self {
     );
   };
 
+  /// Fetches the total supply of vote tokens at a specific time point in the past.
   public shared func getPastTotalSupply(timepoint : Time.Time) : async Nat {
     await ledgerActor.icrc3_past_total_supply(Nat64.fromNat(Int.abs(timepoint)));
   };
 
+  /// Retrieves the number of vote tokens held by an account at a specific time point in the past.
   public shared func getPastVotes(account : Principal, timepoint : Time.Time) : async Nat {
     await ledgerActor.icrc3_past_balance_of({
       account = { owner = account; subaccount = null };

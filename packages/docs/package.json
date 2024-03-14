@@ -1,0 +1,7 @@
+{
+  "name": "docs",
+  "private": true,
+  "scripts": {
+    "_build": "$(dfx cache show)/mo-doc --source ../canisters/src/governor.mo --format html --output dist"
+  }
+}

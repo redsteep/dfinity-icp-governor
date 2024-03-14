@@ -49,3 +49,4 @@ dfx deploy governor \
   --yes
 
 dfx deploy --network $NETWORK frontend
+dfx deploy --network $NETWORK docs

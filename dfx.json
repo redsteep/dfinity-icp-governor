@@ -21,6 +21,12 @@
       "optimize": "cycles",
       "gzip": true
     },
+    "docs": {
+      "type": "assets",
+      "source": ["./packages/docs/public/"],
+      "frontend": {},
+      "gzip": true
+    },
     "frontend": {
       "type": "assets",
       "dependencies": ["governor", "internet_identity"],
